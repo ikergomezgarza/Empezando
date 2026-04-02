@@ -117,12 +117,13 @@ def ebitdas(c_name):
         "confidence":       confidence
     }
     
-def funds_table(ebitda_results, entry_multiple=10, pct_debt=0.70,
-                pct_senior=0.60, pct_sub=0.40,
+def funds_table(ebitda_results, entry_multiple=10, 
+                pct_debt=0.70, pct_senior=0.60, 
                 transaction_fee_pct=0.02, financing_fee_pct=0.035,
                 mgmt_rollover_pct=0.10, verbose= False):
     
     ebitda= ebitda_results["ebitda"]
+    pct_sub= 1 - pct_senior
     
     #Enterprise Value
     TEV= ebitda * entry_multiple

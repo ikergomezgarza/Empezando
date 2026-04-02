@@ -37,5 +37,7 @@ if __name__ == "__main__":
     DCF= pricing_dcf(CF, r= rate, n= year, g= growth)
     
     st.write(DCF)
+    st.text_input("Ticker", "MANH")
     
+#streamlit run /Users/ikergg/Documents/Python learning/Proyectos/Empezando/proyects/learn_streamlit/l2_plotgraph.py
     
