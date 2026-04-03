@@ -6,7 +6,6 @@ from finvizfinance.screener.financial import Financial
 import pandas as pd
 import numpy as np
 import yfinance as yf
-from edgar import Company, find_company
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
@@ -72,40 +71,22 @@ def check_rate(cashflow, marketcap):
  #def compare_entries_exits(c_name):
 
 def ebitdas(c_name):
-    result = find_company(c_name)
-    company = Company(result.cik)
-    financials = company.get_financials()
-    df_inc  = company.income_statement().to_dataframe()
-    df_cash = company.cashflow_statement().to_dataframe()
+    ticker = yf.Ticker(c_name)
+    inc = ticker.financials
+    cf  = ticker.cashflow
 
-    # ── Find year column (handle FY and non-FY formats) ──────────────
-    year_cols = [c for c in df_inc.columns if "FY" in c]
-    if not year_cols:
-        # fallback: take first numeric-looking column
-        year_cols = [c for c in df_inc.columns if any(ch.isdigit() for ch in str(c))]
-    if not year_cols:
-        print(f" {c_name}: no year columns found. Columns: {df_inc.columns.tolist()}")
-        return None
-    year = year_cols[0]
-    print(f"Using year: {year}")
+    year = str(inc.columns[0].year)
 
-    # ── Operating Income ─────────────────────────────────────────────
-    a = df_inc.loc[df_inc.index.str.contains("OperatingIncomeLoss", na=False), year]
-    operating_income = int(a.iloc[0]) if not a.empty else 0
-
-    # ── D&A ──────────────────────────────────────────────────────────
+    operating_income = inc.loc["Operating Income"].iloc[0] if "Operating Income" in inc.index else 0
+    
     dep_am = 0
-    for tag in ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization", "Depreciation"]:
-        a = df_cash.loc[df_cash.index.str.contains(tag, na=False), year]
-        if not a.empty and pd.notna(a.iloc[0]):
-            dep_am = a.iloc[0]
+    for tag in ["Depreciation And Amortization", "Depreciation"]:
+        if tag in cf.index:
+            dep_am = cf.loc[tag].iloc[0]
             break
 
-    # ── EBITDA ───────────────────────────────────────────────────────
     ebitda = operating_income + dep_am
-    print(f"{c_name} | {year} | Op.Income: {operating_income/1e6:.1f}M | D&A: {dep_am/1e6:.1f}M | EBITDA: {ebitda/1e6:.1f}M")
-
-    confidence = "high" if (operating_income != 0 and dep_am != 0 and "2024" not in str(year)) else "low"
+    confidence = "high" if (operating_income != 0 and dep_am != 0) else "low"
 
     return {
         "operating_income": operating_income,
@@ -180,58 +161,47 @@ def funds_table(ebitda_results, entry_multiple=10,
     return results
 
 def fcf_data(c_name):
-    result = find_company(c_name)
-    company = Company(result.cik)
-    financials = company.get_financials()
+    ticker = yf.Ticker(c_name)
+    cf  = ticker.cashflow
+    bal = ticker.balance_sheet
+    inc = ticker.financials
 
-    df_cash= company.cashflow_statement().to_dataframe()
-    df_bal=company.balance_sheet().to_dataframe()
-    df_inc=company.income_statement().to_dataframe()
+    year     = cf.columns[0]
+    year_prev= cf.columns[1]
 
-    year_cols = [c for c in df_cash.columns if "FY" in c]
-    year = year_cols[0]
-    year_prev= year_cols[1]
-
-    #--------Getting values---------
     CAPEX = 0
-    for tag in ["PaymentsToAcquirePropertyPlantAndEquipment","CapitalExpenditures"]:
-        a = df_cash.loc[df_cash.index.str.contains(tag, na=False), year]
-        if not a.empty and pd.notna(a.iloc[0]):
-            CAPEX = a.iloc[0]
-            break  
+    for tag in ["Capital Expenditure", "Purchase Of Property Plant And Equipment"]:
+        if tag in cf.index:
+            CAPEX = abs(cf.loc[tag].iloc[0])
+            break
 
-    assets_m = df_bal.loc[df_bal.index == "AssetsCurrent"]
-    liab_m   = df_bal.loc[df_bal.index == "LiabilitiesCurrent"]
-    NWC = (assets_m[year].iloc[0] - liab_m[year].iloc[0]) if (not assets_m.empty and not liab_m.empty) else None
-    NWC_1 = (assets_m[year_prev].iloc[0] - liab_m[year_prev].iloc[0]) if (not assets_m.empty and not liab_m.empty) else None
-    
-    NWC_change= (NWC - NWC_1)
+    NWC   = None
+    NWC_1 = None
+    if "Current Assets" in bal.index and "Current Liabilities" in bal.index:
+        NWC   = bal.loc["Current Assets"].iloc[0]   - bal.loc["Current Liabilities"].iloc[0]
+        NWC_1 = bal.loc["Current Assets"].iloc[1]   - bal.loc["Current Liabilities"].iloc[1]
 
-    tax_m    = df_inc.loc[df_inc.index == "IncomeTaxExpenseBenefit"]
-    pretax_m = df_inc.loc[df_inc.index.str.contains("IncomeLossFromContinuingOperationsBeforeIncomeTaxes", na=False)]
-    tax_rate = (tax_m[year].iloc[0] / pretax_m[year].iloc[0]) if (not tax_m.empty and not pretax_m.empty and pretax_m[year].iloc[0] != 0) else None
-    
+    NWC_change = (NWC - NWC_1) if (NWC is not None and NWC_1 is not None) else 0
+
+    tax_rate = None
+    if "Tax Provision" in inc.index and "Pretax Income" in inc.index:
+        pretax = inc.loc["Pretax Income"].iloc[0]
+        tax    = inc.loc["Tax Provision"].iloc[0]
+        tax_rate = tax / pretax if pretax != 0 else None
+
     if CAPEX == 0 or NWC is None:
-        tax_rate=.25
-        confidence= "low"
+        tax_rate   = 0.25
+        confidence = "low"
     else:
-        confidence= "high"
-    
-    print(f"{c_name} | {year}")
-    print(f"  CapEx:      {CAPEX/1e6:.1f}M")
-    print(f"  NWC:        {NWC/1e6:.1f}M" if NWC is not None else "  NWC:      ⚠️ not found")
-    print(f"  NWC_change: {NWC_change/1e6:.1f}M" if NWC_change is not None else "  NWC:      ⚠️ not found")
-    print(f"  Tax rate:   {tax_rate:.1%}" if tax_rate is not None else "  Tax rate: ⚠️ not found")
-    print(f"  Confidence: {confidence}  ")
-    print("-----------------------------------------------")
-    
+        confidence = "high"
+
     return {
-        "CAPEX":            CAPEX,
-        "NWC":              NWC,
-        "NWC_change":       NWC_change,
-        "tax_rate":         tax_rate,
-        "year":             year,
-        "confidence":       confidence
+        "CAPEX":      CAPEX,
+        "NWC":        NWC,
+        "NWC_change": NWC_change,
+        "tax_rate":   tax_rate or 0.25,
+        "year":       str(year.year),
+        "confidence": confidence
     }
       
 def fcf_model (ebitdas_data, fcf_data, ebitda_growth= .05, years= 5, nwc_pct=.02):
