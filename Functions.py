@@ -7,7 +7,10 @@ import pandas as pd
 import numpy as np
 from edgar import *
 import yfinance as yf
-set_identity("ikergogiga@gmail.com")
+import os
+from dotenv import load_dotenv
+load_dotenv()
+set_identity(os.getenv("EMAIL"))
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
