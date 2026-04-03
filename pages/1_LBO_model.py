@@ -90,63 +90,63 @@ if st.button("Run"):
         #evaluate_company
         evaluate_results= evaluate_company(c_name, entry_multiple= entry_multiple )
 
-    st.write("")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.metric("IRR", f"{returns_results['IRR']:.1%}")
-        if returns_results["IRR"] > .2:
-            st.success("Acceptable")
-        else:
-            st.error("Not acceptable")
-
-    with col2:
-        st.metric("MoM", f"{returns_results['MoM']:.2f}x")
-        if returns_results["MoM"] > 2.5:
-            st.success("Acceptable")
-        else:
-            st.error("Not acceptable")
-
-    st.write("")
-    st.header(f"{c_name} main accounting data")
-    st.write("")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.write(f"Year:                         {ebitdas_datas["year"]}")
-        st.write(f"Ebitda:                       {ebitdas_datas["ebitda"]/1e6:.1f}M")
-        st.write(f"Depreciation & Amortization:  {ebitdas_datas["dep_am"]/1e6:.1f}M")
-        st.write(f"Operating income:             {ebitdas_datas["operating_income"]/1e6:.1f}M")      
-        st.write(f"CAPEX:                        {fcf_datas["CAPEX"]/1e6:.1f}M")
-        st.write(f"NWC:                          {fcf_datas["NWC"]/1e6:.1f}M")
-        st.write(f"NWC change:                   {fcf_datas["NWC_change"]/1e6:.1f}M")
-        st.write(f"Tax rate:                     {fcf_datas["tax_rate"]:.1%}")
-        
         st.write("")
-        st.subheader("Checks")
-        st.write(f"Total Debt / EBITDA:          {funds_results["Total_Debt_/_EBITDA"]}")
-        st.write(f"Senior Debt / EBITDA:         {funds_results["Senior_Debt_/_EBITDA"]}")
-        st.write(f"Equity:                       {funds_results["Equity_%"]}")
-        
-    with col2: 
-        st.subheader("Uses")
-        st.write(f"TEV:                         {funds_results["TEV"]/1e6:.1f}M")
-        st.write(f"Transaccion Fees:            {funds_results["transaccion_fees"]/1e6:.1f}M")
-        st.write(f"Financing Fees:              {funds_results["financing_fees"]/1e6:.1f}M")
-        st.write(f"Total Uses:                  {funds_results["total_uses"]/1e6:.1f}M")
-        
-        st.write("")
-        st.subheader("Sources")
-        st.write(f"Senior debt:                 {funds_results["senior_debt"]/1e6:.1f}M")
-        st.write(f"Sub debt:                    {funds_results["Sub/_HY_debt"]/1e6:.1f}M")
-        st.write(f"Total debt:                  {funds_results["total_debt"]/1e6:.1f}M")
-        st.write(f"Managment rollover:          {funds_results["managment_rollover"]/1e6:.1f}M")
-        st.write(f"Sponsor equity:              {funds_results["sponsor_equity"]/1e6:.1f}M")
-        st.write(f"Total Sources:               {funds_results["Total_Sources"]/1e6:.1f}M")
-        
-        
-    #this for later 
-    #compare_entries_exits
+        col1, col2 = st.columns(2)
 
-    #highlight_irr
+        with col1:
+            st.metric("IRR", f"{returns_results['IRR']:.1%}")
+            if returns_results["IRR"] > .2:
+                st.success("Acceptable")
+            else:
+                st.error("Not acceptable")
+
+        with col2:
+            st.metric("MoM", f"{returns_results['MoM']:.2f}x")
+            if returns_results["MoM"] > 2.5:
+                st.success("Acceptable")
+            else:
+                st.error("Not acceptable")
+
+        st.write("")
+        st.header(f"{c_name} main accounting data")
+        st.write("")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write(f"Year:                         {ebitdas_datas["year"]}")
+            st.write(f"Ebitda:                       {ebitdas_datas["ebitda"]/1e6:.1f}M")
+            st.write(f"Depreciation & Amortization:  {ebitdas_datas["dep_am"]/1e6:.1f}M")
+            st.write(f"Operating income:             {ebitdas_datas["operating_income"]/1e6:.1f}M")      
+            st.write(f"CAPEX:                        {fcf_datas["CAPEX"]/1e6:.1f}M")
+            st.write(f"NWC:                          {fcf_datas["NWC"]/1e6:.1f}M")
+            st.write(f"NWC change:                   {fcf_datas["NWC_change"]/1e6:.1f}M")
+            st.write(f"Tax rate:                     {fcf_datas["tax_rate"]:.1%}")
+            
+            st.write("")
+            st.subheader("Checks")
+            st.write(f"Total Debt / EBITDA:          {funds_results["Total_Debt_/_EBITDA"]}")
+            st.write(f"Senior Debt / EBITDA:         {funds_results["Senior_Debt_/_EBITDA"]}")
+            st.write(f"Equity:                       {funds_results["Equity_%"]}")
+            
+        with col2: 
+            st.subheader("Uses")
+            st.write(f"TEV:                         {funds_results["TEV"]/1e6:.1f}M")
+            st.write(f"Transaccion Fees:            {funds_results["transaccion_fees"]/1e6:.1f}M")
+            st.write(f"Financing Fees:              {funds_results["financing_fees"]/1e6:.1f}M")
+            st.write(f"Total Uses:                  {funds_results["total_uses"]/1e6:.1f}M")
+            
+            st.write("")
+            st.subheader("Sources")
+            st.write(f"Senior debt:                 {funds_results["senior_debt"]/1e6:.1f}M")
+            st.write(f"Sub debt:                    {funds_results["Sub/_HY_debt"]/1e6:.1f}M")
+            st.write(f"Total debt:                  {funds_results["total_debt"]/1e6:.1f}M")
+            st.write(f"Managment rollover:          {funds_results["managment_rollover"]/1e6:.1f}M")
+            st.write(f"Sponsor equity:              {funds_results["sponsor_equity"]/1e6:.1f}M")
+            st.write(f"Total Sources:               {funds_results["Total_Sources"]/1e6:.1f}M")
+            
+            
+        #this for later 
+        #compare_entries_exits
+
+        #highlight_irr
