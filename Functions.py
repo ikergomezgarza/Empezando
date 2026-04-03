@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np
 from edgar import *
 import yfinance as yf
-from IPython.display import display
 set_identity("ikergogiga@gmail.com")
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
