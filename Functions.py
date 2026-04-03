@@ -151,20 +151,20 @@ def funds_table(ebitda_results, entry_multiple=10,
     results={
         "--USES-------------------":"",
         "TEV": TEV,
-        "transaccion fees":transaccion_fees,
-        "financing fees": financing_fees,
-        "total uses": total_uses,
+        "transaccion_fees":transaccion_fees,
+        "financing_fees": financing_fees,
+        "total_uses": total_uses,
         "--SOURCES-----------------":"",
-        "senior debt":senior_debt,
-        "Sub/ HY debt": sub_debt,
-        "total debt": total_debt,
-        "managment rollover":managment_rollover,
-        "sponsor equity":sponsor_equity,
-        "Total Sources":total_debt+ managment_rollover + sponsor_equity,
+        "senior_debt":senior_debt,
+        "Sub/_HY_debt": sub_debt,
+        "total_debt": total_debt,
+        "managment_rollover":managment_rollover,
+        "sponsor_equity":sponsor_equity,
+        "Total_Sources":total_debt+ managment_rollover + sponsor_equity,
         "--CHECKS------------------":"",
-        "Total Debt / EBITDA": f"{total_debt_x:.1f}x",
-        "Senior Debt / EBITDA": f"{senior_debt_x:.1f}x",
-        "Equity %": f"{(equity_requirement / total_uses):.1%}",
+        "Total_Debt_/_EBITDA": f"{total_debt_x:.1f}x",
+        "Senior_Debt_/_EBITDA": f"{senior_debt_x:.1f}x",
+        "Equity_%": f"{(equity_requirement / total_uses):.1%}",
         }
     
     #AI did it for good visual representation
@@ -276,9 +276,9 @@ def debt_schedule(funds_results, fcf_results,
                   senior_rate= .07, sub_rate= .10,
                   amort_pct=.05, sweep_pct= .5, years= 5):
     
-    origianl_senior= funds_results["senior debt"]
+    origianl_senior= funds_results["senior_debt"]
     beginning_senior= origianl_senior
-    original_sub= funds_results["Sub/ HY debt"]
+    original_sub= funds_results["Sub/_HY_debt"]
     beginning_sub= original_sub
     fcf_list= fcf_results["fcf_list"]
     
@@ -328,7 +328,7 @@ def returns(fcf_results, debt_results, funds_results, exit_multiple= 9, years= 5
     
     ebitda_last_year= fcf_results["ebitda_list"][-1]
     remaining_debt= debt_results["total_debt_list"][-1]
-    sponsor_equity= funds_results[ "sponsor equity"]
+    sponsor_equity= funds_results[ "sponsor_equity"]
     
     exit_tev= ebitda_last_year* exit_multiple
     equity_value= exit_tev - remaining_debt
@@ -372,7 +372,7 @@ def evaluate_company(c_name, entry_multiple=10):
             "nwc_change_M":    round(b["NWC_change"] / 1e6, 1),
             "tax_rate":        round(b["tax_rate"] * 100, 1),
             "TEV_M":           round(d["TEV"] / 1e6, 1),
-            "sponsor_equity_M":round(d["sponsor equity"] / 1e6, 1),
+            "sponsor_equity_M":round(d["sponsor_equity"] / 1e6, 1),
             "IRR":             round(f["IRR"] * 100, 1),
             "MoM":             round(f["MoM"], 2),
             "pass":            f["IRR"] > 0.20,
