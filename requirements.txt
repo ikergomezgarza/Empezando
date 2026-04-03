@@ -5,3 +5,4 @@ yfinance
 finvizfinance
 edgar
 scipy
+python-dotenv

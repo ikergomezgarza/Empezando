@@ -5,8 +5,8 @@ from finvizfinance.screener.valuation import Valuation
 from finvizfinance.screener.financial import Financial
 import pandas as pd
 import numpy as np
-from edgar import *
 import yfinance as yf
+from edgar import *
 import streamlit as st
 import os
 
