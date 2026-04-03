@@ -22,7 +22,7 @@ sweep_pct =           0.5
 years =               5
 
 st.title("LBO Model")
-st.write("Coming soon")
+
 
 c_name= st.text_input("Ticker", "AAPL")
 
@@ -59,7 +59,7 @@ if modify_variables:
 
 
 if st.button("Run"):
-    with st.spinner("Pulling data from EDGAR..."):
+    with st.spinner("Pulling data from Yfinance..."):
         #ebitdas
         ebitdas_datas= ebitdas(c_name)
 
