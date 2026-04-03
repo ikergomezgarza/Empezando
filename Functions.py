@@ -6,7 +6,8 @@ from finvizfinance.screener.financial import Financial
 import pandas as pd
 import numpy as np
 import yfinance as yf
-from edgar import Company, set_identity
+from edgar import Company
+from edgar.core import set_identity
 set_identity("ikergogiga@gmail.com")
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
