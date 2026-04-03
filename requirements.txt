@@ -3,6 +3,6 @@ pandas
 numpy
 yfinance
 finvizfinance
-edgar
+edgar==5.1.16
 scipy
 python-dotenv

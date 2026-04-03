@@ -6,7 +6,7 @@ from finvizfinance.screener.financial import Financial
 import pandas as pd
 import numpy as np
 import yfinance as yf
-from edgar import Company
+from edgar import Company, find_company
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
@@ -72,8 +72,8 @@ def check_rate(cashflow, marketcap):
  #def compare_entries_exits(c_name):
 
 def ebitdas(c_name):
-
-    company = Company(c_name)
+    result = find_company(c_name)
+    company = Company(result.cik)
     financials = company.get_financials()
     df_inc  = company.income_statement().to_dataframe()
     df_cash = company.cashflow_statement().to_dataframe()
@@ -180,7 +180,8 @@ def funds_table(ebitda_results, entry_multiple=10,
     return results
 
 def fcf_data(c_name):
-    company = Company(c_name)
+    result = find_company(c_name)
+    company = Company(result.cik)
     financials = company.get_financials()
 
     df_cash= company.cashflow_statement().to_dataframe()
