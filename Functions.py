@@ -7,10 +7,11 @@ import pandas as pd
 import numpy as np
 from edgar import *
 import yfinance as yf
+import streamlit as st
 import os
-from dotenv import load_dotenv
-load_dotenv()
-set_identity(os.getenv("EMAIL"))
+
+email = st.secrets.get("EMAIL") or os.getenv("EMAIL")
+set_identity(email)
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
