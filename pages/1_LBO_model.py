@@ -59,36 +59,36 @@ if modify_variables:
 
 
 if st.button("Run"):
-        
-    #ebitdas
-    ebitdas_datas= ebitdas(c_name)
+    with st.spinner("Pulling data from EDGAR..."):
+        #ebitdas
+        ebitdas_datas= ebitdas(c_name)
 
-    #funds_table
-    funds_results= funds_table(ebitdas_datas, entry_multiple= entry_multiple,
-                            pct_debt=pct_debt, pct_senior=pct_senior, 
-                            transaction_fee_pct=transaction_fee_pct, financing_fee_pct= financing_fee_pct, 
-                            mgmt_rollover_pct=mgmt_rollover_pct)
+        #funds_table
+        funds_results= funds_table(ebitdas_datas, entry_multiple= entry_multiple,
+                                pct_debt=pct_debt, pct_senior=pct_senior, 
+                                transaction_fee_pct=transaction_fee_pct, financing_fee_pct= financing_fee_pct, 
+                                mgmt_rollover_pct=mgmt_rollover_pct)
 
-    #fcf_data
-    fcf_datas= fcf_data(c_name)
+        #fcf_data
+        fcf_datas= fcf_data(c_name)
 
-    #fcf_model
-    fcf_results= fcf_model(ebitdas_datas, fcf_datas, 
-                        ebitda_growth= ebitda_growth, 
-                        years= years)
+        #fcf_model
+        fcf_results= fcf_model(ebitdas_datas, fcf_datas, 
+                            ebitda_growth= ebitda_growth, 
+                            years= years)
 
-    #debt_schedule
-    debt_results= debt_schedule(funds_results, fcf_results,
-                                senior_rate=senior_rate, sub_rate= sub_rate, 
-                                amort_pct= amort_pct, sweep_pct= sweep_pct, 
-                                years= years)
+        #debt_schedule
+        debt_results= debt_schedule(funds_results, fcf_results,
+                                    senior_rate=senior_rate, sub_rate= sub_rate, 
+                                    amort_pct= amort_pct, sweep_pct= sweep_pct, 
+                                    years= years)
 
-    #returns
-    returns_results= returns(fcf_results, debt_results, funds_results,
-                            exit_multiple= exit_multiple, years= years)
+        #returns
+        returns_results= returns(fcf_results, debt_results, funds_results,
+                                exit_multiple= exit_multiple, years= years)
 
-    #evaluate_company
-    evaluate_results= evaluate_company(c_name, entry_multiple= entry_multiple )
+        #evaluate_company
+        evaluate_results= evaluate_company(c_name, entry_multiple= entry_multiple )
 
     st.write("")
     col1, col2 = st.columns(2)
