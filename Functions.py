@@ -107,7 +107,6 @@ def get_latest_value(facts, concept):
     return entries[0]["val"]
 
 def get_annual_value(facts, concept):
-    """For income statement items that have start/end dates - filter to ~1 year periods"""
     if concept not in facts:
         return 0
     units = facts[concept]["units"]
@@ -118,6 +117,7 @@ def get_annual_value(facts, concept):
     if not entries:
         return 0
     entries = sorted(entries, key=lambda x: x["end"], reverse=True)
+    print(f"{concept}: {entries[0]}")  # debug
     return entries[0]["val"]
 
 def ebitdas(c_name):
