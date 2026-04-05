@@ -35,7 +35,7 @@ if modify_parameters:
         offer_premium=           st.slider("Offer premium",             0.0, 1.0,     0.6,   step= .1)
         stock_pct=               st.slider("Issued stock percent",      0.0, 1.0,     0.5,   step= .05)
         tax_rate=                st.slider("Tax rate",                  0.0, 0.50,    0.40,  step= .01)
-        interest_rate=          st.slider("Interest rate",             0.0, 0.2,      0.10,  step= .01)
+        interest_rate=           st.slider("Interest rate",             0.0, 0.2,      0.10,  step= .01)
         st.write                 (f"Used Cash percent            {round(1- stock_pct,2)}")
         
         
@@ -94,18 +94,19 @@ if st.button("Run"):
             st.write("Pre tax income")
         with col2:
             st.write(acq_dict["symbol"])
-            st.write(f"{fmt(acq_dict["marketCap"])}")
-            st.write(f"{acq_dict["previousClose"]}")
-            st.write(f"{acq_dict["sharesOutstanding"]/1e6:,.1f}M")
-            st.write(f"{fmt(contract_results["accuary_net_income"])}")
-            st.write(f"{fmt(contract_results["target_net_income"])}")
+            st.write(f"{fmt(acq_dict['marketCap'])}")
+            st.write(f"{acq_dict['previousClose']}")
+            st.write(f"{acq_dict['sharesOutstanding']/1e6:,.1f}M")
+            st.write(f"{fmt(contract_results['accuary_net_income'])}")
+            st.write(f"{fmt(contract_results['accuary_pretax_income'])}")
+
         with col3:
             st.write(tgt_dict["symbol"])
-            st.write(f"{fmt(tgt_dict["marketCap"])}")
-            st.write(f"{tgt_dict["previousClose"]}")
-            st.write(f"{tgt_dict["sharesOutstanding"]/1e6:,.1f}M")
-            st.write(f"{fmt(contract_results["accuary_pretax_income"])}")
-            st.write(f"{fmt(contract_results["target_pretax_income"])}")
+            st.write(f"{fmt(tgt_dict['marketCap'])}")
+            st.write(f"{tgt_dict['previousClose']}")
+            st.write(f"{tgt_dict['sharesOutstanding']/1e6:,.1f}M")
+            st.write(f"{fmt(contract_results['target_net_income'])}")
+            st.write(f"{fmt(contract_results['target_pretax_income'])}")
         
         st.write("")
         

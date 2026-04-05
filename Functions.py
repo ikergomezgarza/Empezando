@@ -89,6 +89,7 @@ def get_cik(ticker):
 
 def get_facts(ticker):
     cik = get_cik(ticker)
+    print(f"{ticker} -> CIK: {cik}")  # debug
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
     r = requests.get(url, headers=HEADERS)
     return r.json()["facts"]["us-gaap"]
@@ -437,7 +438,7 @@ def highlight_irr(val):
 
 
 def get_price_av(ticker):
-    time.sleep(1)  # respect 1 req/sec limit
+    time.sleep(3)  # respect 1 req/sec limit
     url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={AV_KEY}"
     r = requests.get(url)
     data = r.json()
@@ -461,13 +462,16 @@ def get_companys_datas(acq, tgt, verbose=False):
         market_cap = price * shares
         
         # Income statement from EDGAR
-        net_income = get_annual_value(facts, "NetIncomeLoss")
-        pretax     = get_annual_value(facts, "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest")
+        net_income  = get_annual_value(facts, "NetIncomeLoss")
+        if net_income == 0:
+            net_income = get_annual_value(facts, "ProfitLoss")
+
+        pretax = get_annual_value(facts, "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest")
+        if pretax == 0 or abs(pretax) < abs(net_income):
+            pretax = net_income / (1 - 0.21)
         revenue    = get_annual_value(facts, "Revenues")
         if revenue == 0:
             revenue = get_annual_value(facts, "RevenueFromContractWithCustomerExcludingAssessedTax")
-        
-        eps        = net_income / shares if shares else 0
         
         # Book value from EDGAR
         book_value = get_latest_value(facts, "StockholdersEquity")
@@ -477,7 +481,6 @@ def get_companys_datas(acq, tgt, verbose=False):
             "marketCap":         market_cap,
             "previousClose":     price,
             "sharesOutstanding": shares,
-            "epsCurrentYear":    eps,
             "netIncome":   net_income,
             "pretaxIncome": pretax,
             "totalRevenue":      revenue,
@@ -538,8 +541,10 @@ def contract_offer(acq_dict, tgt_dict, offer_premium=.60, stock_pct=0.50, tax_ra
     proforma_net_income= profroma_pretax_adj * (1-tax_rate)
     proforma_shares_outstanding= acq_dict["sharesOutstanding"]+ acq_issued_shares
     proforma_eps= proforma_net_income/proforma_shares_outstanding
-    accretion_dilution_per_share= proforma_eps - acq_dict["epsCurrentYear"]
-    accretion_dilution_pct= (proforma_eps / acq_dict["epsCurrentYear"])-1
+    
+    acq_eps = acq_dict["netIncome"] / acq_dict["sharesOutstanding"]
+    accretion_dilution_per_share = proforma_eps - acq_eps
+    accretion_dilution_pct = (proforma_eps / acq_eps) - 1 if acq_eps != 0 else 0
     
     if verbose == False:
         pass
