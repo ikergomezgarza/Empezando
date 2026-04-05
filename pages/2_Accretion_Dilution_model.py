@@ -151,7 +151,17 @@ if st.button("Run"):
             st.write(f"Proforma Eps:                    {contract_results["proforma_eps"]:,.2f}")
             
             
-        
-        
-    df = sensitivity_accretion_dilution(acq_dict, tgt_dict, steps=1)
+    st.write("")  
+    st.header("Sensitivity table")    
+    df = sensitivity_accretion_dilution(
+        acq_dict, tgt_dict,
+        steps=1,
+        tax_rate=tax_rate,
+        interest_rate=interest_rate,
+        financing_fees_pct=financing_fees_pct,
+        transaccion_fees_pct=transaccion_fees_pct,
+        synergies_pct=synergies_pct,
+        amortization_years=amortization_years,
+        years=years
+    )
     st.dataframe(df.style.format("{:.2f}%").map(highlight_irr_accdil))

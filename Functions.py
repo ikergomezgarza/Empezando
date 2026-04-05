@@ -635,17 +635,20 @@ def highlight_irr_accdil(val):
     else:
         return "background-color: #f8d7da ; color: black "
     
-def sensitivity_accretion_dilution(acq_dict, tgt_dict, verbose=False, steps=1):
+def sensitivity_accretion_dilution(acq_dict, tgt_dict, verbose=False, steps=1, **kwargs):
     
     rows = []
     for i in range(0, 11, steps):
         row = []
         for j in range(0, 11, steps):
-            result = contract_offer(acq_dict, tgt_dict, offer_premium=i/10, stock_pct=j/10, verbose=False)
-            accretion_dilution_pct = round(result["accretion_dilution_pct"] * 100, 2)
-            row.append(accretion_dilution_pct)
+            result = contract_offer(acq_dict, tgt_dict,
+                                    offer_premium=i/10,
+                                    stock_pct=j/10,
+                                    verbose=False,
+                                    **kwargs)
+            row.append(round(result["accretion_dilution_pct"] * 100, 2))
         rows.append(row)
-        
+
     df = pd.DataFrame(rows,
                       columns=[f"Stock {x*10}%" for x in range(0, 11, steps)],
                       index=[f"Offer premium {x*10}%" for x in range(0, 11, steps)])
