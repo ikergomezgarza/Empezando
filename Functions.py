@@ -446,6 +446,7 @@ def get_price_av(ticker):
     key = random.choice(AV_KEYS)
     url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={key}"
     r = requests.get(url)
+    print(f"AV response for {ticker}: {data}")
     data = r.json()
     if "Global Quote" not in data or "05. price" not in data["Global Quote"]:
         raise Exception(f"Price not available for {ticker}. Response: {data}")
