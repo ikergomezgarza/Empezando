@@ -441,16 +441,14 @@ def highlight_irr(val):
 
 def get_price_av(ticker):
 
-    AV_KEYS = [AV_KEY, AV_KEY2]
-    time.sleep(2)
-    key = random.choice(AV_KEYS)
-    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={key}"
-    r = requests.get(url)
-    print(f"AV response for {ticker}: {data}")
-    data = r.json()
-    if "Global Quote" not in data or "05. price" not in data["Global Quote"]:
-        raise Exception(f"Price not available for {ticker}. Response: {data}")
-    return float(data["Global Quote"]["05. price"])
+    try:
+        return yf.Ticker(ticker).fast_info["previous_close"]
+    except:
+        try:
+            hist = yf.Ticker(ticker).history(period="5d")
+            return hist["Close"].iloc[-1]
+        except:
+            return 0
 
 def get_companys_datas(acq, tgt, verbose=False):
     
