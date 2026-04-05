@@ -6,3 +6,4 @@ finvizfinance
 edgar==5.1.16
 scipy
 python-dotenv
+requests

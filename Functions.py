@@ -6,6 +6,13 @@ from finvizfinance.screener.financial import Financial
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import requests
+HEADERS = {"User-Agent": "ikergogiga@gmail.com"}
+import os
+from dotenv import load_dotenv
+import streamlit as st
+load_dotenv()
+AV_KEY = st.secrets.get("AV_KEY") or os.getenv("AV_KEY")
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
@@ -70,22 +77,48 @@ def check_rate(cashflow, marketcap):
 # def evaluate_company(c_name, entry_multiple=10)
  #def compare_entries_exits(c_name):
 
+def get_cik(ticker):
+    url = "https://www.sec.gov/files/company_tickers.json"
+    r = requests.get(url, headers=HEADERS)
+    data = r.json()
+    for item in data.values():
+        if item["ticker"].upper() == ticker.upper():
+            return str(item["cik_str"]).zfill(10)
+    raise Exception(f"Ticker {ticker} not found in SEC database")
+
+def get_facts(ticker):
+    cik = get_cik(ticker)
+    url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+    r = requests.get(url, headers=HEADERS)
+    return r.json()["facts"]["us-gaap"]
+
+def get_latest_value(facts, concept):
+    if concept not in facts:
+        return 0
+    units = facts[concept]["units"]
+    key = list(units.keys())[0]
+    entries = [e for e in units[key] if e.get("form") == "10-K" and "frame" not in e]
+    if not entries:
+        entries = [e for e in units[key] if e.get("form") == "10-K"]
+    if not entries:
+        return 0
+    entries = sorted(entries, key=lambda x: x["end"], reverse=True)
+    return entries[0]["val"]
+
 def ebitdas(c_name):
-    ticker = yf.Ticker(c_name)
-    inc = ticker.financials
-    cf  = ticker.cashflow
+    facts = get_facts(c_name)
 
-    year = str(inc.columns[0].year)
-
-    operating_income = inc.loc["Operating Income"].iloc[0] if "Operating Income" in inc.index else 0
+    operating_income = get_latest_value(facts, "OperatingIncomeLoss")
     
     dep_am = 0
-    for tag in ["Depreciation And Amortization", "Depreciation"]:
-        if tag in cf.index:
-            dep_am = cf.loc[tag].iloc[0]
+    for tag in ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization", "Depreciation"]:
+        val = get_latest_value(facts, tag)
+        if val != 0:
+            dep_am = val
             break
 
     ebitda = operating_income + dep_am
+    year = "latest"
     confidence = "high" if (operating_income != 0 and dep_am != 0) else "low"
 
     return {
@@ -161,48 +194,33 @@ def funds_table(ebitda_results, entry_multiple=10,
     return results
 
 def fcf_data(c_name):
-    ticker = yf.Ticker(c_name)
-    cf  = ticker.cashflow
-    bal = ticker.balance_sheet
-    inc = ticker.financials
+    facts = get_facts(c_name)
 
-    year     = cf.columns[0]
-    year_prev= cf.columns[1]
+    CAPEX = get_latest_value(facts, "PaymentsToAcquirePropertyPlantAndEquipment")
+    if CAPEX == 0:
+        CAPEX = get_latest_value(facts, "CapitalExpendituresIncurredButNotYetPaid")
 
-    CAPEX = 0
-    for tag in ["Capital Expenditure", "Purchase Of Property Plant And Equipment"]:
-        if tag in cf.index:
-            CAPEX = abs(cf.loc[tag].iloc[0])
-            break
+    assets  = get_latest_value(facts, "AssetsCurrent")
+    liabs   = get_latest_value(facts, "LiabilitiesCurrent")
+    NWC     = assets - liabs if (assets and liabs) else None
 
-    NWC   = None
-    NWC_1 = None
-    if "Current Assets" in bal.index and "Current Liabilities" in bal.index:
-        NWC   = bal.loc["Current Assets"].iloc[0]   - bal.loc["Current Liabilities"].iloc[0]
-        NWC_1 = bal.loc["Current Assets"].iloc[1]   - bal.loc["Current Liabilities"].iloc[1]
+    tax     = get_latest_value(facts, "IncomeTaxExpenseBenefit")
+    pretax  = get_latest_value(facts, "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest")
+    tax_rate = (tax / pretax) if (pretax and pretax != 0) else 0.25
 
-    NWC_change = (NWC - NWC_1) if (NWC is not None and NWC_1 is not None) else 0
-
-    tax_rate = None
-    if "Tax Provision" in inc.index and "Pretax Income" in inc.index:
-        pretax = inc.loc["Pretax Income"].iloc[0]
-        tax    = inc.loc["Tax Provision"].iloc[0]
-        tax_rate = tax / pretax if pretax != 0 else None
-
-    if CAPEX == 0 or NWC is None:
-        tax_rate   = 0.25
-        confidence = "low"
-    else:
-        confidence = "high"
+    confidence = "high" if (CAPEX != 0 and NWC is not None) else "low"
+    if confidence == "low":
+        tax_rate = 0.25
 
     return {
         "CAPEX":      CAPEX,
-        "NWC":        NWC,
-        "NWC_change": NWC_change,
-        "tax_rate":   tax_rate or 0.25,
-        "year":       str(year.year),
+        "NWC":        NWC or 0,
+        "NWC_change": 0,
+        "tax_rate":   tax_rate,
+        "year":       "latest",
         "confidence": confidence
     }
+    
       
 def fcf_model (ebitdas_data, fcf_data, ebitda_growth= .05, years= 5, nwc_pct=.02):
     
