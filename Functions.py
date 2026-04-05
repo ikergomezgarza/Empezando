@@ -399,36 +399,43 @@ def highlight_irr(val):
 
 # ── P5: Accretion dilution Model ────────────────────────────────────────────────────────────────
 
-import time
 
-def get_ticker_info(ticker_str):
-    for attempt in range(3):
-        try:
-            t = yf.Ticker(ticker_str)
-            info = t.info
-            if info and len(info) > 5:
-                return t
-        except Exception:
-            pass
-        time.sleep(2)
-    raise Exception(f"Could not fetch data for {ticker_str} — try again in a moment")
-
-
-def get_companys_datas(acq, tgt, verbose= False):
-
-    acq_ticker = get_ticker_info(acq)
-    acq_dict = acq_ticker.info
-    tgt_ticker = get_ticker_info(tgt)
-    tgt_dict = tgt_ticker.info
+def get_companys_datas(acq, tgt, verbose=False):
     
-    if verbose == False: 
-        pass
-    else:
-        print(f"{"values":<15} | {acq_dict["symbol"]:<25} | {tgt_dict["symbol"]:<25}")
+    def extract(ticker_str):
+        t   = yf.Ticker(ticker_str)
+        inc = t.financials
+        bal = t.balance_sheet
+        fi  = t.fast_info
+
+        shares     = bal.loc["Ordinary Shares Number"].iloc[0] if "Ordinary Shares Number" in bal.index else fi.shares
+        price      = fi.last_price
+        market_cap = price * shares
+        net_income = inc.loc["Net Income"].iloc[0] if "Net Income" in inc.index else 0
+        pretax     = inc.loc["Pretax Income"].iloc[0] if "Pretax Income" in inc.index else 0
+        revenue    = inc.loc["Total Revenue"].iloc[0] if "Total Revenue" in inc.index else 0
+        eps        = net_income / shares if shares else 0
+        book_value = bal.loc["Stockholders Equity"].iloc[0] if "Stockholders Equity" in bal.index else 0
+
+        return {
+            "symbol":            ticker_str,
+            "marketCap":         market_cap,
+            "previousClose":     price,
+            "sharesOutstanding": shares,
+            "epsCurrentYear":    eps,
+            "totalRevenue":      revenue,
+            "bookValue":         book_value,
+        }
+
+    acq_dict = extract(acq)
+    tgt_dict = extract(tgt)
+
+    if verbose:
+        print(f"{'values':<15} | {acq_dict['symbol']:<25} | {tgt_dict['symbol']:<25}")
         print("-"*60)
-        print(f"{"Market cap":<15} | {round(acq_dict["marketCap"]):<25,} | {round(tgt_dict["marketCap"]):<25,}")
-        print(f"{"Price":<15} | {acq_dict["previousClose"]:<25} | {tgt_dict["previousClose"]:<25}")
-        print(f"{"Shares":<15} | {acq_dict["sharesOutstanding"]:<25} | {tgt_dict["sharesOutstanding"]:<25}\n\n")
+        print(f"{'Market cap':<15} | {round(acq_dict['marketCap']):.<25,} | {round(tgt_dict['marketCap']):<25,}")
+        print(f"{'Price':<15} | {acq_dict['previousClose']:<25} | {tgt_dict['previousClose']:<25}")
+        print(f"{'Shares':<15} | {acq_dict['sharesOutstanding']:<25} | {tgt_dict['sharesOutstanding']:<25}")
 
     return acq_dict, tgt_dict
 
