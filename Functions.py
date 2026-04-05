@@ -454,7 +454,7 @@ def get_companys_datas(acq, tgt, verbose=False):
         facts = get_facts(ticker_str)
         
         # Price from Alpha Vantage
-        price = get_price_av(ticker_str)
+        price = get_price(ticker_str)
         
         # Shares from EDGAR
         shares = get_latest_value(facts, "CommonStockSharesOutstanding")
