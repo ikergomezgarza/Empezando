@@ -153,4 +153,5 @@ if st.button("Run"):
             
         
         
-  
+    df = sensitivity_accretion_dilution(acq_dict, tgt_dict, steps=1)
+    st.dataframe(df.style.format("{:.2f}%").map(highlight_irr_accdil))

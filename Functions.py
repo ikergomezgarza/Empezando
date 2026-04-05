@@ -629,29 +629,26 @@ def contract_offer(acq_dict, tgt_dict, offer_premium=.60, stock_pct=0.50, tax_ra
 
 def highlight_irr_accdil(val):
     if val >= 0:
-        return "background-color: #d4edda !important; color: black !important"
+        return "background-color: #d4edda ; color: black"
     elif val >= -.05:
-        return "background-color: #fff3cd !important; color: black !important"
+        return "background-color: #fff3cd ; color: black "
     else:
-        return "background-color: #f8d7da !important; color: black !important"
+        return "background-color: #f8d7da ; color: black "
     
-def sensitivity_accretion_dilution(acq, tgt,verbose= False, steps= 1):
+def sensitivity_accretion_dilution(acq_dict, tgt_dict, verbose=False, steps=1):
     
-    rows= []
-    for i in range (0, 11, steps):
-        row= []
+    rows = []
+    for i in range(0, 11, steps):
+        row = []
         for j in range(0, 11, steps):
-
-            accretion_dilution_pct= round(contract_offer(acq, tgt, offer_premium=i/10, stock_pct= j/10, verbose=False), ndigits= 2)
-            
+            result = contract_offer(acq_dict, tgt_dict, offer_premium=i/10, stock_pct=j/10, verbose=False)
+            accretion_dilution_pct = round(result["accretion_dilution_pct"] * 100, 2)
             row.append(accretion_dilution_pct)
-            
         rows.append(row)
-    
-    df = pd.DataFrame(rows, columns = [f"Stock {x*10}%" for x in range(0, 11, steps)], index   = [f"Offer premium {x*10}%"  for x in range(0, 11, steps)])
-    styled= df.style.format("{:.2f}%").map(highlight_irr_accdil)
-    display(styled)
-    
+        
+    df = pd.DataFrame(rows,
+                      columns=[f"Stock {x*10}%" for x in range(0, 11, steps)],
+                      index=[f"Offer premium {x*10}%" for x in range(0, 11, steps)])
     return df
 
 def accretion_dilution_model(acq,tgt):
