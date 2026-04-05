@@ -408,8 +408,11 @@ def get_companys_datas(acq, tgt, verbose=False):
         bal = t.balance_sheet
         fi  = t.fast_info
 
-        shares     = bal.loc["Ordinary Shares Number"].iloc[0] if "Ordinary Shares Number" in bal.index else fi.shares
         price      = fi.last_price
+        try:
+            shares = bal.loc["Ordinary Shares Number"].iloc[0] if "Ordinary Shares Number" in bal.index else bal.loc["Share Issued"].iloc[0]
+        except:
+            shares = market_cap / price
         market_cap = price * shares
         net_income = inc.loc["Net Income"].iloc[0] if "Net Income" in inc.index else 0
         pretax     = inc.loc["Pretax Income"].iloc[0] if "Pretax Income" in inc.index else 0
