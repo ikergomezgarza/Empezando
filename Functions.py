@@ -406,9 +406,11 @@ def get_companys_datas(acq, tgt, verbose=False):
         t   = yf.Ticker(ticker_str)
         inc = t.financials
         bal = t.balance_sheet
-        fi  = t.fast_info
 
-        price = t.history(period="1d")["Close"].iloc[-1]
+        hist = t.history(period="5d")
+        if hist.empty:
+            hist = t.history(period="1mo")
+        price = hist["Close"].iloc[-1]
         try:
             shares = bal.loc["Ordinary Shares Number"].iloc[0] if "Ordinary Shares Number" in bal.index else bal.loc["Share Issued"].iloc[0]
         except:
