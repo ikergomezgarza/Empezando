@@ -478,6 +478,8 @@ def get_companys_datas(acq, tgt, verbose=False):
             "previousClose":     price,
             "sharesOutstanding": shares,
             "epsCurrentYear":    eps,
+            "netIncome":   net_income,
+            "pretaxIncome": pretax,
             "totalRevenue":      revenue,
             "bookValue":         book_value,
         }
@@ -519,10 +521,10 @@ def contract_offer(acq_dict, tgt_dict, offer_premium=.60, stock_pct=0.50, tax_ra
     incremental_DA_expense = asset_write_off/amortization_years 
     
     # Expected earnings
-    acq_implide_net_inc= acq_dict["sharesOutstanding"]* acq_dict["epsCurrentYear"]
-    tgt_implide_net_inc= tgt_dict["sharesOutstanding"]* tgt_dict["epsCurrentYear"]
-    acq_implide_pretax_inc= acq_implide_net_inc /(1-tax_rate)
-    tgt_implide_pretax_inc= tgt_implide_net_inc /(1-tax_rate)
+    acq_implide_net_inc    = acq_dict["netIncome"]
+    tgt_implide_net_inc    = tgt_dict["netIncome"]
+    acq_implide_pretax_inc = acq_dict["pretaxIncome"]
+    tgt_implide_pretax_inc = tgt_dict["pretaxIncome"]
     
     #Getting all together and in negatice (accounting reasons)
     profroma_pretax_unadj= acq_implide_pretax_inc + tgt_implide_pretax_inc
