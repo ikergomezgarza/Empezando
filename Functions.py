@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import requests
+import time
 HEADERS = {"User-Agent": "ikergogiga@gmail.com"}
 import os
 from dotenv import load_dotenv
@@ -422,10 +423,10 @@ def highlight_irr(val):
 
 
 def get_price_av(ticker):
+    time.sleep(2)  # respect 1 req/sec limit
     url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={AV_KEY}"
     r = requests.get(url)
     data = r.json()
-    print(data)  # debug
     if "Global Quote" not in data or "05. price" not in data["Global Quote"]:
         raise Exception(f"Price not available for {ticker}. Response: {data}")
     return float(data["Global Quote"]["05. price"])
