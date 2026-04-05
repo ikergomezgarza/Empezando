@@ -106,6 +106,20 @@ def get_latest_value(facts, concept):
     entries = sorted(entries, key=lambda x: x["end"], reverse=True)
     return entries[0]["val"]
 
+def get_annual_value(facts, concept):
+    """For income statement items that have start/end dates - filter to ~1 year periods"""
+    if concept not in facts:
+        return 0
+    units = facts[concept]["units"]
+    key = list(units.keys())[0]
+    entries = [e for e in units[key] if e.get("form") == "10-K" and e.get("start") is not None]
+    entries = [e for e in entries if 
+               300 < (pd.to_datetime(e["end"]) - pd.to_datetime(e["start"])).days < 400]
+    if not entries:
+        return 0
+    entries = sorted(entries, key=lambda x: x["end"], reverse=True)
+    return entries[0]["val"]
+
 def ebitdas(c_name):
     facts = get_facts(c_name)
 
@@ -447,11 +461,11 @@ def get_companys_datas(acq, tgt, verbose=False):
         market_cap = price * shares
         
         # Income statement from EDGAR
-        net_income = get_latest_value(facts, "NetIncomeLoss")
-        pretax     = get_latest_value(facts, "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest")
-        revenue    = get_latest_value(facts, "Revenues")
+        net_income = get_annual_value(facts, "NetIncomeLoss")
+        pretax     = get_annual_value(facts, "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest")
+        revenue    = get_annual_value(facts, "Revenues")
         if revenue == 0:
-            revenue = get_latest_value(facts, "RevenueFromContractWithCustomerExcludingAssessedTax")
+            revenue = get_annual_value(facts, "RevenueFromContractWithCustomerExcludingAssessedTax")
         
         eps        = net_income / shares if shares else 0
         
