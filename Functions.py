@@ -8,12 +8,14 @@ import numpy as np
 import yfinance as yf
 import requests
 import time
+import random
 HEADERS = {"User-Agent": "ikergogiga@gmail.com"}
 import os
 from dotenv import load_dotenv
 import streamlit as st
 load_dotenv()
 AV_KEY = st.secrets.get("AV_KEY") or os.getenv("AV_KEY")
+AV_KEY2 = st.secrets.get("AV_KEY") or os.getenv("AV_KEY")
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
@@ -438,8 +440,11 @@ def highlight_irr(val):
 
 
 def get_price_av(ticker):
-    time.sleep(10)  # respect 1 req/sec limit
-    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={AV_KEY}"
+
+    AV_KEYS = [AV_KEY, AV_KEY2]
+    time.sleep(2)
+    key = random.choice(AV_KEYS)
+    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={key}"
     r = requests.get(url)
     data = r.json()
     if "Global Quote" not in data or "05. price" not in data["Global Quote"]:
