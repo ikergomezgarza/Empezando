@@ -2,10 +2,7 @@ import streamlit as st
 
 from Functions import ebitdas, funds_table, fcf_data, fcf_model, debt_schedule, returns, evaluate_company, compare_entries_exits, highlight_irr
 
-modify_values= False
-modify_fees= False
-modify_percents= False
-modify_values= False
+modify_variables= False
 
 entry_multiple =      10
 exit_multiple =       9
@@ -26,6 +23,7 @@ st.title("LBO Model")
 
 c_name= st.text_input("Ticker", "AAPL")
 
+st.write("")  
 modify_variables= st.toggle("Modify parameters")
     
 
@@ -150,3 +148,25 @@ if st.button("Run"):
         #compare_entries_exits
 
         #highlight_irr
+        
+        st.header("Sensitivity table")
+
+    
+        params = {
+            "entry_multiple": entry_multiple,
+            "exit_multiple": exit_multiple,
+            "pct_debt": pct_debt,
+            "pct_senior": pct_senior,
+            "transaction_fee_pct": transaction_fee_pct,
+            "financing_fee_pct": financing_fee_pct,
+            "mgmt_rollover_pct": mgmt_rollover_pct,
+            "ebitda_growth": ebitda_growth,
+            "senior_rate": senior_rate,
+            "sub_rate": sub_rate,
+            "amort_pct": amort_pct,
+            "sweep_pct": sweep_pct,
+            "years": years
+        }
+
+        df = compare_entries_exits(c_name, params)
+        st.dataframe(df.style.format("{:.1f}%").applymap(highlight_irr))

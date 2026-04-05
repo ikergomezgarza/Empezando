@@ -32,12 +32,13 @@ def ebitdas(c_name):
         "confidence":       confidence
     }
     
-def funds_table(ebitda_results, entry_multiple=10, pct_debt=0.70,
-                pct_senior=0.60, pct_sub=0.40,
+def funds_table(ebitda_results, entry_multiple=10, 
+                pct_debt=0.70, pct_senior=0.60, 
                 transaction_fee_pct=0.02, financing_fee_pct=0.035,
-                mgmt_rollover_pct=0.10, verbose= False):
+                mgmt_rollover_pct=0.10, verbose= False,  **kwargs):
     
     ebitda= ebitda_results["ebitda"]
+    pct_sub= 1 - pct_senior
     
     #Enterprise Value
     TEV= ebitda * entry_multiple
@@ -65,20 +66,20 @@ def funds_table(ebitda_results, entry_multiple=10, pct_debt=0.70,
     results={
         "--USES-------------------":"",
         "TEV": TEV,
-        "transaccion fees":transaccion_fees,
-        "financing fees": financing_fees,
-        "total uses": total_uses,
+        "transaccion_fees":transaccion_fees,
+        "financing_fees": financing_fees,
+        "total_uses": total_uses,
         "--SOURCES-----------------":"",
-        "senior debt":senior_debt,
-        "Sub/ HY debt": sub_debt,
-        "total debt": total_debt,
-        "managment rollover":managment_rollover,
-        "sponsor equity":sponsor_equity,
-        "Total Sources":total_debt+ managment_rollover + sponsor_equity,
+        "senior_debt":senior_debt,
+        "Sub/_HY_debt": sub_debt,
+        "total_debt": total_debt,
+        "managment_rollover":managment_rollover,
+        "sponsor_equity":sponsor_equity,
+        "Total_Sources":total_debt+ managment_rollover + sponsor_equity,
         "--CHECKS------------------":"",
-        "Total Debt / EBITDA": f"{total_debt_x:.1f}x",
-        "Senior Debt / EBITDA": f"{senior_debt_x:.1f}x",
-        "Equity %": f"{(equity_requirement / total_uses):.1%}",
+        "Total_Debt_/_EBITDA": f"{total_debt_x:.1f}x",
+        "Senior_Debt_/_EBITDA": f"{senior_debt_x:.1f}x",
+        "Equity_%": f"{(equity_requirement / total_uses):.1%}",
         }
     
     #AI did it for good visual representation
@@ -137,8 +138,8 @@ def fcf_data(c_name):
         "tax_rate":   tax_rate or 0.25,
         "year":       str(year.year),
         "confidence": confidence
-    }   
-    
+    }
+      
 def fcf_model (ebitdas_data, fcf_data, ebitda_growth= .05, years= 5, nwc_pct=.02):
     
     ebitda = ebitdas_data["ebitda"]
@@ -175,14 +176,14 @@ def fcf_model (ebitdas_data, fcf_data, ebitda_growth= .05, years= 5, nwc_pct=.02
         "nopat_list": nopat_list,
         "fcf_list": fcf_list,
         }
-    
+
 def debt_schedule(funds_results, fcf_results, 
                   senior_rate= .07, sub_rate= .10,
-                  amort_pct=.05, sweep_pct= .5, years= 5):
+                  amort_pct=.05, sweep_pct= .5, years= 5, **kwargs):
     
-    origianl_senior= funds_results["senior debt"]
+    origianl_senior= funds_results["senior_debt"]
     beginning_senior= origianl_senior
-    original_sub= funds_results["Sub/ HY debt"]
+    original_sub= funds_results["Sub/_HY_debt"]
     beginning_sub= original_sub
     fcf_list= fcf_results["fcf_list"]
     
@@ -228,11 +229,11 @@ def debt_schedule(funds_results, fcf_results,
         "total_debt_list": total_debt_list,
         }
     
-def returns(fcf_results, debt_results, funds_results, exit_multiple= 9, years= 5, verbose= False ):
+def returns(fcf_results, debt_results, funds_results, exit_multiple= 9, years= 5, verbose= False, **kwargs ):
     
     ebitda_last_year= fcf_results["ebitda_list"][-1]
     remaining_debt= debt_results["total_debt_list"][-1]
-    sponsor_equity= funds_results[ "sponsor equity"]
+    sponsor_equity= funds_results[ "sponsor_equity"]
     
     exit_tev= ebitda_last_year* exit_multiple
     equity_value= exit_tev - remaining_debt
@@ -276,7 +277,7 @@ def evaluate_company(c_name, entry_multiple=10):
             "nwc_change_M":    round(b["NWC_change"] / 1e6, 1),
             "tax_rate":        round(b["tax_rate"] * 100, 1),
             "TEV_M":           round(d["TEV"] / 1e6, 1),
-            "sponsor_equity_M":round(d["sponsor equity"] / 1e6, 1),
+            "sponsor_equity_M":round(d["sponsor_equity"] / 1e6, 1),
             "IRR":             round(f["IRR"] * 100, 1),
             "MoM":             round(f["MoM"], 2),
             "pass":            f["IRR"] > 0.20,
@@ -285,38 +286,48 @@ def evaluate_company(c_name, entry_multiple=10):
     except Exception as ex:
         print(f"⚠️ {c_name} failed: {ex}")
         return None
-  
-def highlight_irr(val):
-    if val >= 25:
-        return "background-color: #d4edda !important; color: black !important"
-    elif val >= 20:
-        return "background-color: #fff3cd !important; color: black !important"
-    else:
-        return "background-color: #f8d7da !important; color: black !important"  
     
-def compare_entries_exits(c_name, verbose=False):
+def compare_entries_exits(c_name, params, verbose=False):
     
     a = ebitdas(c_name)
     b = fcf_data(c_name)
-    c = fcf_model(a, b)
-    total= []
+    
+    c = fcf_model(
+        a, b,
+        ebitda_growth=params.get("ebitda_growth", 0.05),
+        years=params.get("years", 5)
+    )
+
+    total = []
     
     for i in range(5, 11):
-        rows= []
-        for j in range(5,11):
-            d = funds_table(a, entry_multiple=j, verbose= verbose)
-            e = debt_schedule(d, c)
-            f = returns(c, e, d, exit_multiple= i, verbose= verbose)
-            rows.append(round(f["IRR"]*100,1))
+        rows = []
+        for j in range(5, 11):
+
+            local_params = params.copy()
+            local_params["entry_multiple"] = j
+            local_params["exit_multiple"] = i
+
+            d = funds_table(a, **local_params)
+            e = debt_schedule(d, c, **local_params)
+            f = returns(c, e, d, **local_params)
+
+            rows.append(round(f["IRR"] * 100, 1))
             
         total.append(rows)
         
-    df = pd.DataFrame(total, columns = [f"Entry {x}" for x in range(5, 11)], index   = [f"Exit {x}"  for x in range(5, 11)])
-    
-    
-    return df.style.format("{:.1f}%").map(highlight_irr)
+    df = pd.DataFrame(
+        total,
+        columns=[f"Entry {x}" for x in range(5, 11)],
+        index=[f"Exit {x}" for x in range(5, 11)]
+    )
 
-if __name__ == "__main__":
+    return df
     
-    result= compare_entries_exits("MANH", verbose= False)
-    print(result.data.to_string())
+def highlight_irr(val):
+    if val >= 25:
+        return "background-color: #d4edda ; color: black "
+    elif val >= 20:
+        return "background-color: #fff3cd; color: black"
+    else:
+        return "background-color: #f8d7da; color: black "

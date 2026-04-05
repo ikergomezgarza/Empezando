@@ -99,7 +99,7 @@ def ebitdas(c_name):
 def funds_table(ebitda_results, entry_multiple=10, 
                 pct_debt=0.70, pct_senior=0.60, 
                 transaction_fee_pct=0.02, financing_fee_pct=0.035,
-                mgmt_rollover_pct=0.10, verbose= False):
+                mgmt_rollover_pct=0.10, verbose= False,  **kwargs):
     
     ebitda= ebitda_results["ebitda"]
     pct_sub= 1 - pct_senior
@@ -243,7 +243,7 @@ def fcf_model (ebitdas_data, fcf_data, ebitda_growth= .05, years= 5, nwc_pct=.02
 
 def debt_schedule(funds_results, fcf_results, 
                   senior_rate= .07, sub_rate= .10,
-                  amort_pct=.05, sweep_pct= .5, years= 5):
+                  amort_pct=.05, sweep_pct= .5, years= 5, **kwargs):
     
     origianl_senior= funds_results["senior_debt"]
     beginning_senior= origianl_senior
@@ -293,7 +293,7 @@ def debt_schedule(funds_results, fcf_results,
         "total_debt_list": total_debt_list,
         }
     
-def returns(fcf_results, debt_results, funds_results, exit_multiple= 9, years= 5, verbose= False ):
+def returns(fcf_results, debt_results, funds_results, exit_multiple= 9, years= 5, verbose= False, **kwargs ):
     
     ebitda_last_year= fcf_results["ebitda_list"][-1]
     remaining_debt= debt_results["total_debt_list"][-1]
@@ -351,36 +351,50 @@ def evaluate_company(c_name, entry_multiple=10):
         print(f"⚠️ {c_name} failed: {ex}")
         return None
     
-def compare_entries_exits(c_name, verbose=False):
+def compare_entries_exits(c_name, params, verbose=False):
     
     a = ebitdas(c_name)
     b = fcf_data(c_name)
-    c = fcf_model(a, b)
-    total= []
+    
+    c = fcf_model(
+        a, b,
+        ebitda_growth=params.get("ebitda_growth", 0.05),
+        years=params.get("years", 5)
+    )
+
+    total = []
     
     for i in range(5, 11):
-        rows= []
-        for j in range(5,11):
-            d = funds_table(a, entry_multiple=j, verbose= verbose)
-            e = debt_schedule(d, c)
-            f = returns(c, e, d, exit_multiple= i, verbose= verbose)
-            rows.append(round(f["IRR"]*100,1))
+        rows = []
+        for j in range(5, 11):
+
+            local_params = params.copy()
+            local_params["entry_multiple"] = j
+            local_params["exit_multiple"] = i
+
+            d = funds_table(a, **local_params)
+            e = debt_schedule(d, c, **local_params)
+            f = returns(c, e, d, **local_params)
+
+            rows.append(round(f["IRR"] * 100, 1))
             
         total.append(rows)
         
-    df = pd.DataFrame(total, columns = [f"Entry {x}" for x in range(5, 11)], index   = [f"Exit {x}"  for x in range(5, 11)])
-    
-    df.style.format("{:.1f}%").applymap(highlight_irr)
-       
+    df = pd.DataFrame(
+        total,
+        columns=[f"Entry {x}" for x in range(5, 11)],
+        index=[f"Exit {x}" for x in range(5, 11)]
+    )
+
     return df
     
 def highlight_irr(val):
     if val >= 25:
-        return "background-color: #d4edda !important; color: black !important"
+        return "background-color: #d4edda ; color: black "
     elif val >= 20:
-        return "background-color: #fff3cd !important; color: black !important"
+        return "background-color: #fff3cd; color: black"
     else:
-        return "background-color: #f8d7da !important; color: black !important"
+        return "background-color: #f8d7da; color: black "
 
 
 # ── P5: Accretion dilution Model ────────────────────────────────────────────────────────────────
@@ -403,7 +417,7 @@ def get_companys_datas(acq, tgt, verbose= False):
 
 def contract_offer(acq_dict, tgt_dict, offer_premium=.60, stock_pct=0.50, tax_rate=0.40,
                    years= 5, interest_rate= 0.05, financing_fees_pct=.035,transaccion_fees_pct= .02, 
-                   synergies_pct=0, amortization_years= 10, verbose=False ):
+                   synergies_pct=0, amortization_years= 10, verbose=False, **kwargs):
     
     # % of deal pay by cahs and with stocks
     cash_pct= 1-stock_pct
@@ -455,7 +469,7 @@ def contract_offer(acq_dict, tgt_dict, offer_premium=.60, stock_pct=0.50, tax_ra
         print(f"% of stock:               | {stock_pct*100}%")
         print(f"tax rate:                 | {tax_rate*100}%")
         print(f"interest rate:            | {interest_rate*100}%")
-        print(f"% financing fees:         | {transaccion_fees_pct*100}%")
+        print(f"% financing fees:         | {financing_fees_pct*100}%")
         print(f"% transaccion fees:       | {transaccion_fees_pct*100}%")
         print(f"% synergies:              | {synergies_pct*100}%")
         print(f"{"-"*60}\n")
@@ -495,7 +509,35 @@ def contract_offer(acq_dict, tgt_dict, offer_premium=.60, stock_pct=0.50, tax_ra
         print(f"Accretion/Dilution:       | $ {accretion_dilution_per_share:.2f}")
         print(f"%Accretion/Dilution:      | % {accretion_dilution_pct:.2f}")
     
-    return accretion_dilution_pct
+    returns= {
+    
+    "share_price": share_price,
+    "offer_value":offer_value,
+    "money_borrowed": acq_borrowing,
+    "financing_fees":financing_fees,
+    "transaccion_fees":transaccion_fees,
+    "shares_issued": acq_issued_shares,
+    "accuary_net_income": acq_implide_net_inc,
+    "target_net_income": tgt_implide_net_inc,
+    "accuary_pretax_income": acq_implide_pretax_inc,
+    "target_pretax_income": tgt_implide_pretax_inc,
+    "synergies":synergies,
+    
+    
+    "profroma_pretax_unadj": profroma_pretax_unadj,
+    "interest_expense_deal": interest_expense_deal,
+    "financing_fees_amort": financing_fees_amort,
+    "incremental_DA_expense": incremental_DA_expense,
+    
+    "profroma_pretax_adj": profroma_pretax_adj,
+    "proforma_net_income": proforma_net_income,
+    "proforma_shares_outstanding": proforma_shares_outstanding,
+    "proforma_eps": proforma_eps,
+    "accretion_dilution_per_share": accretion_dilution_per_share,
+    "accretion_dilution_pct": accretion_dilution_pct,
+
+}
+    return returns
 
 def highlight_irr_accdil(val):
     if val >= 0:
@@ -518,7 +560,7 @@ def sensitivity_accretion_dilution(acq, tgt,verbose= False, steps= 1):
             
         rows.append(row)
     
-    df= df = pd.DataFrame(rows, columns = [f"Stock {x*10}%" for x in range(0, 11, steps)], index   = [f"Offer premium {x*10}%"  for x in range(0, 11, steps)])
+    df = pd.DataFrame(rows, columns = [f"Stock {x*10}%" for x in range(0, 11, steps)], index   = [f"Offer premium {x*10}%"  for x in range(0, 11, steps)])
     styled= df.style.format("{:.2f}%").map(highlight_irr_accdil)
     display(styled)
     
