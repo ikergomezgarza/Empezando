@@ -219,8 +219,7 @@ def fcf_data(c_name):
         "tax_rate":   tax_rate,
         "year":       "latest",
         "confidence": confidence
-    }
-    
+    }   
       
 def fcf_model (ebitdas_data, fcf_data, ebitda_growth= .05, years= 5, nwc_pct=.02):
     
@@ -373,29 +372,33 @@ def compare_entries_exits(c_name, params, verbose=False):
     
     a = ebitdas(c_name)
     b = fcf_data(c_name)
-    
-    c = fcf_model(
-        a, b,
-        ebitda_growth=params.get("ebitda_growth", 0.05),
-        years=params.get("years", 5)
-    )
+    c = fcf_model(a, b,
+                  ebitda_growth=params.get("ebitda_growth", 0.05),
+                  years=params.get("years", 5))
 
     total = []
     
     for i in range(5, 11):
         rows = []
         for j in range(5, 11):
-
-            local_params = params.copy()
-            local_params["entry_multiple"] = j
-            local_params["exit_multiple"] = i
-
-            d = funds_table(a, **local_params)
-            e = debt_schedule(d, c, **local_params)
-            f = returns(c, e, d, **local_params)
+            d = funds_table(a,
+                            entry_multiple=j,
+                            pct_debt=params.get("pct_debt", 0.70),
+                            pct_senior=params.get("pct_senior", 0.60),
+                            transaction_fee_pct=params.get("transaction_fee_pct", 0.02),
+                            financing_fee_pct=params.get("financing_fee_pct", 0.035),
+                            mgmt_rollover_pct=params.get("mgmt_rollover_pct", 0.10))
+            e = debt_schedule(d, c,
+                              senior_rate=params.get("senior_rate", 0.07),
+                              sub_rate=params.get("sub_rate", 0.10),
+                              amort_pct=params.get("amort_pct", 0.05),
+                              sweep_pct=params.get("sweep_pct", 0.50),
+                              years=params.get("years", 5))
+            f = returns(c, e, d,
+                        exit_multiple=i,
+                        years=params.get("years", 5))
 
             rows.append(round(f["IRR"] * 100, 1))
-            
         total.append(rows)
         
     df = pd.DataFrame(
@@ -403,7 +406,7 @@ def compare_entries_exits(c_name, params, verbose=False):
         columns=[f"Entry {x}" for x in range(5, 11)],
         index=[f"Exit {x}" for x in range(5, 11)]
     )
-
+    
     return df
     
 def highlight_irr(val):
