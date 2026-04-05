@@ -98,14 +98,9 @@ def get_latest_value(facts, concept):
         return 0
     units = facts[concept]["units"]
     key = list(units.keys())[0]
-    entries = [e for e in units[key] 
-               if e.get("form") == "10-K" 
-               and "frame" not in e
-               and e.get("start") is not None
-               and e.get("end") is not None]
-    # filter to ~annual entries (between 300 and 400 days)
-    entries = [e for e in entries if 
-               300 < (pd.to_datetime(e["end"]) - pd.to_datetime(e["start"])).days < 400]
+    entries = [e for e in units[key] if e.get("form") == "10-K" and "frame" not in e]
+    if not entries:
+        entries = [e for e in units[key] if e.get("form") == "10-K"]
     if not entries:
         return 0
     entries = sorted(entries, key=lambda x: x["end"], reverse=True)
