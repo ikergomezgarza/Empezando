@@ -425,6 +425,9 @@ def get_price_av(ticker):
     url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={AV_KEY}"
     r = requests.get(url)
     data = r.json()
+    print(data)  # debug
+    if "Global Quote" not in data or "05. price" not in data["Global Quote"]:
+        raise Exception(f"Price not available for {ticker}. Response: {data}")
     return float(data["Global Quote"]["05. price"])
 
 def get_companys_datas(acq, tgt, verbose=False):
