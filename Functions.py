@@ -14,8 +14,8 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 load_dotenv()
-AV_KEY = st.secrets.get("AV_KEY") or os.getenv("AV_KEY")
-AV_KEY2 = st.secrets.get("AV_KEY") or os.getenv("AV_KEY")
+ALPACA_KEY    = st.secrets.get("ALPACA_KEY") or os.getenv("ALPACA_KEY")
+ALPACA_SECRET = st.secrets.get("ALPACA_SECRET") or os.getenv("ALPACA_SECRET")
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
@@ -438,17 +438,15 @@ def highlight_irr(val):
 
 # ── P5: Accretion dilution Model ────────────────────────────────────────────────────────────────
 
-
-def get_price_av(ticker):
-
-    try:
-        return yf.Ticker(ticker).fast_info["previous_close"]
-    except:
-        try:
-            hist = yf.Ticker(ticker).history(period="5d")
-            return hist["Close"].iloc[-1]
-        except:
-            return 0
+def get_price(ticker):
+    url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes/latest"
+    headers = {
+        "APCA-API-KEY-ID": ALPACA_KEY,
+        "APCA-API-SECRET-KEY": ALPACA_SECRET
+    }
+    r = requests.get(url, headers=headers)
+    data = r.json()
+    return float(data["quote"]["ap"])
 
 def get_companys_datas(acq, tgt, verbose=False):
     
