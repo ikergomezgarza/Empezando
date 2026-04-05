@@ -1,7 +1,7 @@
 streamlit
 pandas
 numpy
-yfinance==0.2.38
+yfinance==0.2.43
 finvizfinance
 edgar==5.1.16
 scipy
