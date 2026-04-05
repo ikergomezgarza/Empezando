@@ -16,7 +16,7 @@ financing_fees_pct=    0.035
 transaccion_fees_pct=  0.02 
 synergies_pct=         0
 amortization_years=    10
-                  
+                
 st.title("Accretion / Dilution")
 
 col1, col2= st.columns(2)

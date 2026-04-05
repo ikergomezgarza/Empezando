@@ -407,8 +407,15 @@ def get_companys_datas(acq, tgt, verbose=False):
         inc = t.financials
         bal = t.balance_sheet
 
+        
+        try:
+            shares = bal.loc["Ordinary Shares Number"].iloc[0]
+        except:
+            try:
+                shares = bal.loc["Share Issued"].iloc[0]
+            except:
+                shares = 1
         market_cap = bal.loc["Total Capitalization"].iloc[0] if "Total Capitalization" in bal.index else 0
-        shares     = bal.loc["Ordinary Shares Number"].iloc[0] if "Ordinary Shares Number" in bal.index else bal.loc["Share Issued"].iloc[0]
         price      = market_cap / shares if shares else 0
         net_income = inc.loc["Net Income"].iloc[0] if "Net Income" in inc.index else 0
         pretax     = inc.loc["Pretax Income"].iloc[0] if "Pretax Income" in inc.index else 0
