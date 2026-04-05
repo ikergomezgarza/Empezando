@@ -423,7 +423,7 @@ def highlight_irr(val):
 
 
 def get_price_av(ticker):
-    time.sleep(2)  # respect 1 req/sec limit
+    time.sleep(1)  # respect 1 req/sec limit
     url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={AV_KEY}"
     r = requests.get(url)
     data = r.json()
