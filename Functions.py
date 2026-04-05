@@ -421,28 +421,38 @@ def highlight_irr(val):
 # ── P5: Accretion dilution Model ────────────────────────────────────────────────────────────────
 
 
+def get_price_av(ticker):
+    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={AV_KEY}"
+    r = requests.get(url)
+    data = r.json()
+    return float(data["Global Quote"]["05. price"])
+
 def get_companys_datas(acq, tgt, verbose=False):
     
     def extract(ticker_str):
-        t   = yf.Ticker(ticker_str)
-        inc = t.financials
-        bal = t.balance_sheet
-
+        facts = get_facts(ticker_str)
         
-        try:
-            shares = bal.loc["Ordinary Shares Number"].iloc[0]
-        except:
-            try:
-                shares = bal.loc["Share Issued"].iloc[0]
-            except:
-                shares = 1
-        market_cap = bal.loc["Total Capitalization"].iloc[0] if "Total Capitalization" in bal.index else 0
-        price      = market_cap / shares if shares else 0
-        net_income = inc.loc["Net Income"].iloc[0] if "Net Income" in inc.index else 0
-        pretax     = inc.loc["Pretax Income"].iloc[0] if "Pretax Income" in inc.index else 0
-        revenue    = inc.loc["Total Revenue"].iloc[0] if "Total Revenue" in inc.index else 0
+        # Price from Alpha Vantage
+        price = get_price_av(ticker_str)
+        
+        # Shares from EDGAR
+        shares = get_latest_value(facts, "CommonStockSharesOutstanding")
+        if shares == 0:
+            shares = get_latest_value(facts, "CommonStockSharesIssued")
+        
+        market_cap = price * shares
+        
+        # Income statement from EDGAR
+        net_income = get_latest_value(facts, "NetIncomeLoss")
+        pretax     = get_latest_value(facts, "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest")
+        revenue    = get_latest_value(facts, "Revenues")
+        if revenue == 0:
+            revenue = get_latest_value(facts, "RevenueFromContractWithCustomerExcludingAssessedTax")
+        
         eps        = net_income / shares if shares else 0
-        book_value = bal.loc["Stockholders Equity"].iloc[0] if "Stockholders Equity" in bal.index else 0
+        
+        # Book value from EDGAR
+        book_value = get_latest_value(facts, "StockholdersEquity")
 
         return {
             "symbol":            ticker_str,
@@ -460,7 +470,7 @@ def get_companys_datas(acq, tgt, verbose=False):
     if verbose:
         print(f"{'values':<15} | {acq_dict['symbol']:<25} | {tgt_dict['symbol']:<25}")
         print("-"*60)
-        print(f"{'Market cap':<15} | {round(acq_dict['marketCap']):.<25,} | {round(tgt_dict['marketCap']):<25,}")
+        print(f"{'Market cap':<15} | {round(acq_dict['marketCap']):,} | {round(tgt_dict['marketCap']):,}")
         print(f"{'Price':<15} | {acq_dict['previousClose']:<25} | {tgt_dict['previousClose']:<25}")
         print(f"{'Shares':<15} | {acq_dict['sharesOutstanding']:<25} | {tgt_dict['sharesOutstanding']:<25}")
 
