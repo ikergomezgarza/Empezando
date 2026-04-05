@@ -399,10 +399,27 @@ def highlight_irr(val):
 
 # ── P5: Accretion dilution Model ────────────────────────────────────────────────────────────────
 
+import time
+
+def get_ticker_info(ticker_str):
+    for attempt in range(3):
+        try:
+            t = yf.Ticker(ticker_str)
+            info = t.info
+            if info and len(info) > 5:
+                return t
+        except Exception:
+            pass
+        time.sleep(2)
+    raise Exception(f"Could not fetch data for {ticker_str} — try again in a moment")
+
+
 def get_companys_datas(acq, tgt, verbose= False):
 
-    acq_dict = yf.Ticker(acq).info
-    tgt_dict = yf.Ticker(tgt).info
+    acq_ticker = get_ticker_info(acq)
+    acq_dict = acq_ticker.info
+    tgt_ticker = get_ticker_info(tgt)
+    tgt_dict = tgt_ticker.info
     
     if verbose == False: 
         pass
