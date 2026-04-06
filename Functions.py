@@ -1233,9 +1233,6 @@ def calculate_beta(ticker, period="1y"):
 
     covariance = df.cov().iloc[0, 1]
     variance   = df["market"].var()
-    
-    print(f"covariance and variance")
-    print(covariance, variance)
 
     return covariance / variance
       
@@ -1255,7 +1252,7 @@ def sensitivity_DCF(ticker, verbose= False):
         for j in wacc_vals:
             
             fcf_list= forecast_unlevered_FCF(c_data, g= i,verbose= False)
-            enterprise_value= discount_FCF_WACC( fcf_list, WACC= j, g=i, verbose=False, g_longterm=.025)
+            enterprise_value= discount_FCF_WACC( fcf_list, WACC= j, verbose=False, g_longterm=.025)
             intrinsic_price= final_details(c_data, enterprise_value, verbose= False)
             rows.append(round(intrinsic_price, 2))
 
@@ -1290,6 +1287,6 @@ def DCF_Model(ticker, verbose= False, g=.1):
     
     intrinsic_price= final_details(c_data, enterprise_value, verbose= verbose)
 
-    sensitivity_DCF("META", verbose= verbose)
+    sensitivity_DCF(ticker, verbose= verbose)
 
     return intrinsic_price
