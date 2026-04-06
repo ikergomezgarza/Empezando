@@ -4,48 +4,13 @@ st.title("Relative Valuation")
 
 from Functions import company_data, get_company_area, get_index_companies, get_competition, filter_df, clean_dfs, all_values, build_table, relative_valuation, streamlit_df
 
-def fmt(val):
-    return f"${val/1e6:,.1f}M"
 
-
-modify_parameters= False
-
-offer_premium=         0.60
-stock_pct=             0.50 
-tax_rate=              0.40
-years=                 5
-interest_rate=         0.05 
-financing_fees_pct=    0.035
-transaccion_fees_pct=  0.02 
-synergies_pct=         0
-amortization_years=    10
-                
-st.title("Relative Valuation")
 
 ticker= st.text_input("Company to evaluate", "AAPL")
-
-st.write("")  
-modify_parameters= st.toggle("Modify parameters")    
-if modify_parameters:
-    pass
-    #later
     
 st.write("")       
 if st.button("Run"):
     
-    
-        
-    params = {
-        "offer_premium": offer_premium,
-        "stock_pct": stock_pct,
-        "tax_rate": tax_rate,
-        "years": years,
-        "interest_rate": interest_rate,
-        "financing_fees_pct": financing_fees_pct,
-        "transaccion_fees_pct": transaccion_fees_pct,
-        "synergies_pct": synergies_pct,
-        "amortization_years": amortization_years,
-    }
     
     with st.spinner("Getting Company data"): 
         stock_dict= company_data(ticker)
