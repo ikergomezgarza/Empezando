@@ -13,9 +13,11 @@ HEADERS = {"User-Agent": "ikergogiga@gmail.com"}
 import os
 from dotenv import load_dotenv
 import streamlit as st
+
 load_dotenv()
 ALPACA_KEY    = st.secrets.get("ALPACA_KEY") or os.getenv("ALPACA_KEY")
 ALPACA_SECRET = st.secrets.get("ALPACA_SECRET") or os.getenv("ALPACA_SECRET")
+FRED_KEY = st.secrets.get("FRED_KEY") or os.getenv("FRED_KEY")
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
@@ -788,7 +790,6 @@ def clean_dfs(all_dfs, ticker):
                 
     return all_dfs
 
-
 def all_values(all_dfs_clean):
 
     alpaca_headers = {
@@ -1002,108 +1003,96 @@ def streamlit_df(all_dataframes, ticker):
 
 # ── P7: DCF model ────────────────────────────────────────────────────────────────
 
-def get_company_dcf_data(ticker, verbose= False):
-    
-    company = Company(ticker)
-    financials = company.get_financials()
-    df_inc  = company.income_statement().to_dataframe()
-    df_cash = company.cashflow_statement().to_dataframe()
-    df_bal=company.balance_sheet().to_dataframe()
-    yfin_ticker = yf.Ticker(ticker)
-    info   = yfin_ticker.info
+def get_company_dcf_data(ticker, verbose=False):
 
-    # ── Find year column (handle FY and non-FY formats) ──────────────
-    year_cols = [c for c in df_inc.columns if "FY" in c]
-    if not year_cols:
-        # fallback: take first numeric-looking column
-        year_cols = [c for c in df_inc.columns if any(ch.isdigit() for ch in str(c))]
-    if not year_cols:
-        print(f" {ticker}: no year columns found. Columns: {df_inc.columns.tolist()}")
+    facts = get_facts(ticker)
+
+    # ── Find latest 10-K year ────────────────────────────────────────
+    entries = facts.get("OperatingIncomeLoss", {}).get("units", {}).get("USD", [])
+    annual  = [e for e in entries if e.get("form") == "10-K"]
+    annual  = sorted(annual, key=lambda x: x["end"], reverse=True)
+    year    = annual[0]["end"][:4] if annual else None
+    if not year:
         return None
-    year = year_cols[0]
-    year_prev= year_cols[1]
-    
 
-    # ── Operating Income ─────────────────────────────────────────────
-    a = df_inc.loc[df_inc.index.str.contains("OperatingIncomeLoss", na=False), year]
-    operating_income = int(a.iloc[0]) if not a.empty else 0
+    # ── Core financials from EDGAR ───────────────────────────────────
+    operating_income = get_latest_value(facts, "OperatingIncomeLoss")
 
-    # ── D&A ──────────────────────────────────────────────────────────
     dep_am = 0
     for tag in ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization", "Depreciation"]:
-        a = df_cash.loc[df_cash.index.str.contains(tag, na=False), year]
-        if not a.empty and pd.notna(a.iloc[0]):
-            dep_am = a.iloc[0]
+        val = get_latest_value(facts, tag)
+        if val:
+            dep_am = val
             break
 
-    # ── EBITDA ───────────────────────────────────────────────────────
     ebitda = operating_income + dep_am
 
-    
-    # ── CAPEX ───────────────────────────────────────────────────────
-    CAPEX = abs(yfin_ticker.cashflow.loc["Capital Expenditure"].iloc[0] )
-    for tag in ["PaymentsToAcquirePropertyPlantAndEquipment","CapitalExpenditures"]:
-        a = df_cash.loc[df_cash.index.str.contains(tag, na=False), year]
-        if not a.empty and pd.notna(a.iloc[0]):
-            CAPEX = a.iloc[0]
-            break
-    
-    # ── NWC ───────────────────────────────────────────────────────
-    assets_m = df_bal.loc[df_bal.index == "AssetsCurrent"]
-    liab_m   = df_bal.loc[df_bal.index == "LiabilitiesCurrent"]
-    NWC = (assets_m[year].iloc[0] - liab_m[year].iloc[0]) if (not assets_m.empty and not liab_m.empty) else None
-    NWC_1 = (assets_m[year_prev].iloc[0] - liab_m[year_prev].iloc[0]) if (not assets_m.empty and not liab_m.empty) else None
-    NWC_change= (NWC - NWC_1)
-    
-    # ── TAX RATE ───────────────────────────────────────────────────────
-    tax_m    = df_inc.loc[df_inc.index == "IncomeTaxExpenseBenefit"]
-    pretax_m = df_inc.loc[df_inc.index.str.contains("IncomeLossFromContinuingOperationsBeforeIncomeTaxes", na=False)]
-    tax_rate = (tax_m[year].iloc[0] / pretax_m[year].iloc[0]) if (not tax_m.empty and not pretax_m.empty and pretax_m[year].iloc[0] != 0) else None
-    tax_rate = 0.21 if (tax_rate < 0 or tax_rate > 0.40) else tax_rate
-    
-    
-    # ──WACC EXTRA DATA ─────────────────────────────────────────────────────── 
+    CAPEX = abs(get_latest_value(facts, "PaymentsToAcquirePropertyPlantAndEquipment") or
+                get_latest_value(facts, "CapitalExpenditures") or 0)
+
+    # ── NWC ──────────────────────────────────────────────────────────
+    def get_value_by_year(facts, concept, target_year):
+        try:
+            entries = facts[concept]["units"]["USD"]
+            annual  = [e for e in entries if e.get("form") == "10-K"]
+            annual  = sorted(annual, key=lambda x: x["end"], reverse=True)
+            for e in annual:
+                if e["end"][:4] == target_year:
+                    return e["val"]
+            return None
+        except Exception:
+            return None
+
+    assets_curr   = get_value_by_year(facts, "AssetsCurrent", year)
+    liab_curr     = get_value_by_year(facts, "LiabilitiesCurrent", year)
+    assets_prev   = get_value_by_year(facts, "AssetsCurrent", str(int(year)-1))
+    liab_prev     = get_value_by_year(facts, "LiabilitiesCurrent", str(int(year)-1))
+
+    NWC       = (assets_curr - liab_curr)   if (assets_curr and liab_curr)   else 0
+    NWC_1     = (assets_prev - liab_prev)   if (assets_prev and liab_prev)   else 0
+    NWC_change = NWC - NWC_1
+
+    # ── Tax rate ─────────────────────────────────────────────────────
+    tax_exp   = get_latest_value(facts, "IncomeTaxExpenseBenefit")
+    pretax    = get_latest_value(facts, "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest")
+    tax_rate  = (tax_exp / pretax) if (tax_exp and pretax and pretax != 0) else 0.21
+    tax_rate  = 0.21 if (tax_rate < 0 or tax_rate > 0.40) else tax_rate
+
+    # ── WACC inputs ──────────────────────────────────────────────────
     try:
-        beta = round(calculate_beta(ticker),2)
+        beta = round(calculate_beta(ticker), 2)
     except:
-        beta= info["beta"] 
-        
-    market_cap = info["marketCap"]
-    total_debt = yfin_ticker.balance_sheet.loc["Total Debt"].iloc[0]
-    
-    try:
-        interest_expense    = yfin_ticker.financials.loc["Interest Expense"].iloc[0]
-        interest_expense = 0 if np.isnan(interest_expense) else abs(interest_expense)
-    except:
-        interest_expense = 0
-        print(f"interest expense missing — so 0 used for {ticker}")
-    
-    
-    # ──TRESURY BOND PRICE ───────────────────────────────────────────────────────  
-    tnx = yf.Ticker("^TNX")
-    data = tnx.history(period="1d")
-    bond_10yr= data["Close"].iloc[-1]/100
-    
-    # ──CASH ─────────────────────────────────────────────────────── 
-    cash = yfin_ticker.balance_sheet.loc["Cash And Cash Equivalents"].iloc[0]
-    shares= info["sharesOutstanding"]
-    share_price= info["previousClose"]
-    
-    confidence = "high" if (operating_income != 0 and dep_am != 0 and "2024"  not in str(year)) else "low"
-        
-    if verbose:   
-        
+        beta = 1.0
+
+    shares      = get_latest_value(facts, "CommonStockSharesOutstanding")
+    total_debt  = get_latest_value(facts, "LongTermDebt") or 0
+    cash        = get_latest_value(facts, "CashAndCashEquivalentsAtCarryingValue") or 0
+    interest_expense = abs(get_latest_value(facts, "InterestExpense") or 0)
+
+    # ── Price from Alpaca ────────────────────────────────────────────
+    alpaca_headers = {
+        "APCA-API-KEY-ID":     ALPACA_KEY,
+        "APCA-API-SECRET-KEY": ALPACA_SECRET
+    }
+    snap        = requests.get(f"https://data.alpaca.markets/v2/stocks/{ticker}/snapshot", headers=alpaca_headers).json()
+    share_price = snap.get("latestTrade", {}).get("p")
+    market_cap  = share_price * shares
+
+    # ── 10yr treasury from FRED ──────────────────────────────────────
+    fred = requests.get(f"https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=1&api_key={FRED_KEY}&file_type=json")
+    bond_10yr = float(fred.json()["observations"][0]["value"]) / 100
+
+    confidence = "high" if (operating_income != 0 and dep_am != 0) else "low"
+
+    if verbose:
         print(f"Using          {ticker}, {year} financial year")
         print(f"Confidence:    {confidence}, \n")
-        
         print(f"Market cap:    {market_cap/1e6:.1f}M")
         print(f"Shares:        {shares}")
         print(f"Share price:   {share_price}")
         print(f"Cash:          {cash/1e6:.1f}M")
         print(f"InterestExp:   {interest_expense/1e6:.1f}M,\n")
         print(f"Total debt:    {total_debt/1e6:.1f}M,\n")
-        
-        
         print(f"EBITDA:        {ebitda/1e6:.1f}M")
         print(f"Ebit:          {operating_income/1e6:.1f}M")
         print(f"D&A:           {dep_am/1e6:.1f}M ")
@@ -1111,8 +1100,6 @@ def get_company_dcf_data(ticker, verbose= False):
         print(f"NWC change:    {NWC_change/1e6:.1f}M")
         print(f"tax_rate:      {tax_rate:.1%}")
         print("-"*50)
-        print("")
-
 
     return {
         "operating_income": operating_income,
@@ -1220,16 +1207,36 @@ def final_details(c_data, enterprise_value, verbose= False):
     
     return intrinsic_price
 
-def calculate_beta (ticker,market= "^GSPC", period = "1y"):
-    
-    stock= yf.Ticker(ticker).history(period=period)["Close"].pct_change()
-    mkt= yf.Ticker(market).history(period=period)["Close"].pct_change()
-    
-    df= pd.DataFrame({"market": mkt, "stock":stock}).dropna()
-    
+def calculate_beta(ticker, period="1y"):
+
+    alpaca_headers = {
+        "APCA-API-KEY-ID":     ALPACA_KEY,
+        "APCA-API-SECRET-KEY": ALPACA_SECRET
+    }
+
+    end   = pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d")
+    start = (pd.Timestamp.now(tz="UTC") - pd.DateOffset(years=1)).strftime("%Y-%m-%d")
+
+    def get_prices(t):
+        url    = f"https://data.alpaca.markets/v2/stocks/{t}/bars"
+        params = {"timeframe": "1Day", "start": start, "end": end, "limit": 1000, "feed": "iex"}
+        r      = requests.get(url, headers=alpaca_headers, params=params)
+        bars   = r.json().get("bars", [])
+        print(f"{t}: {len(bars)} bars")  # debug
+        return pd.Series({b["t"]: b["c"] for b in bars})
+
+    stock_prices = get_prices(ticker)
+    spy_prices   = get_prices("SPY")
+
+    df = pd.DataFrame({"stock": stock_prices, "market": spy_prices}).dropna()
+    df = df.pct_change().dropna()
+
     covariance = df.cov().iloc[0, 1]
     variance   = df["market"].var()
     
+    print(f"covariance and variance")
+    print(covariance, variance)
+
     return covariance / variance
       
 def sensitivity_DCF(ticker, verbose= False):
