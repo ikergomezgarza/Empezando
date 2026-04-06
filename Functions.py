@@ -1234,7 +1234,9 @@ def calculate_beta(ticker, period="1y"):
     variance   = df["market"].var()
 
     return covariance / variance
-      
+
+
+         
 def sensitivity_DCF(ticker, verbose= False):
 
     total=[]
@@ -1257,19 +1259,22 @@ def sensitivity_DCF(ticker, verbose= False):
 
         total.append(rows)
             
+
     df = pd.DataFrame(total,
-                    columns=[f"{w:.0%}" for w in wacc_vals],
-                    index=[f"{g:.0%}" for g in g_vals])
+                columns=[f"WACC {w:.0%}" for w in wacc_vals],
+                index=[f"Growth Rate {g:.0%}" for g in g_vals])
 
+    
     current_price= c_data["share_price"]
-
+    
     def highlight_dcf(val):
+
         if val >  current_price * 1.1:
-            return "background-color: #d4edda !important; color: black !important"
+            return "background-color: #d4edda ; color: black "
         elif val < current_price * .9:
-            return "background-color: #f8d7da !important; color: black !important"
+            return "background-color: #f8d7da; color: black"
         else:      
-            return "background-color: #fff3cd !important; color: black !important"
+            return "background-color: #fff3cd; color: black "
 
     print(f"\n[{ticker}] Current Price: ${current_price}")
     return df.style.map(highlight_dcf).format("{:.2f}")

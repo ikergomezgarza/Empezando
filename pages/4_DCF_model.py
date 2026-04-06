@@ -93,4 +93,5 @@ if st.button("Run"):
         st.write(f"Enterprise value:         {(c_data["market_cap"] + c_data["total_debt"])/1e6:,.1f}M")
         st.write(f"WACC:                     {WACC:.1%}")
         
-        
+        df = sensitivity_DCF(ticker, verbose=False)
+        st.dataframe(df, use_container_width=True)
