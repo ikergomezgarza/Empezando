@@ -25,9 +25,9 @@ if st.button("Run"):
         
         c_data= get_company_dcf_data(ticker, verbose=True)
     
-        fcf_list= forecast_unlevered_FCF(c_data, g= g, verbose=True)
+        fcf_list= forecast_unlevered_FCF(c_data, g= g, year= year, verbose=True)
     
-        WACC= get_wacc(c_data, verbose=True )
+        WACC= get_wacc(c_data, equity_risk_premium=equity_risk_premium, verbose=True )
     
         enterprise_value= discount_FCF_WACC( fcf_list, WACC, g_longterm=.025, verbose=True)
     
