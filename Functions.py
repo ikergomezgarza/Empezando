@@ -952,20 +952,24 @@ def relative_valuation(ticker):
     
 def streamlit_df(all_dataframes, ticker):
     
-    streamlit_dfs={}
+    streamlit_dfs = {}
+    
     for i in all_dataframes:
-        df= all_dataframes[i]
-        df = df.set_index("ticker")
-
+        df = all_dataframes[i]
+        
+        if "ticker" in df.columns:
+            df = df.set_index("ticker")
         df = df.drop(columns=["shares", "price"])
-        stocks  = df.loc[ticker]
-        means   = df.mean(numeric_only=True)
-        medians = df.median(numeric_only=True)
-        expected  = df.loc[ticker].copy()
-        expected["enterprise value"]= stocks["ebitda"] * medians["ev/ebitda"]
-        expected["market cap"]= expected["enterprise value"] - stocks["net debt"] - stocks["minority interest"]
-        expected["ev/ebitda"]= medians["ev/ebitda"]
-        expected["ev/revenue"]= expected["enterprise value"] / expected["total revenue"]
+        
+        stocks   = df.loc[ticker]
+        means    = df.mean(numeric_only=True)
+        medians  = df.median(numeric_only=True)
+        expected = df.loc[ticker].copy()
+        
+        expected["enterprise value"] = stocks["ebitda"] * medians["ev/ebitda"]
+        expected["market cap"]       = expected["enterprise value"] - stocks["net debt"] - stocks["minority interest"]
+        expected["ev/ebitda"]        = medians["ev/ebitda"]
+        expected["ev/revenue"]       = expected["enterprise value"] / expected["total revenue"]
 
         comparison_df = pd.DataFrame({
             "Mean":     means,
@@ -973,8 +977,8 @@ def streamlit_df(all_dataframes, ticker):
             ticker:     stocks,
             "Expected": expected,
         }).T
-        streamlit_dfs[i]=comparison_df
-    
+        
+        streamlit_dfs[i] = comparison_df
     
     return streamlit_dfs
     
