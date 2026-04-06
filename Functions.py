@@ -812,6 +812,7 @@ def all_values(all_dfs_clean):
             try:
                 facts         = get_facts(t)
                 total_debt    = get_latest_value(facts, "LongTermDebt")
+                minority_interest = get_latest_value(facts, "MinorityInterest") or get_latest_value(facts, "NoncontrollingInterestMember") or 0
                 total_cash    = get_latest_value(facts, "CashAndCashEquivalentsAtCarryingValue")
                 total_revenue = get_latest_value(facts, "Revenues") or get_latest_value(facts, "RevenueFromContractWithCustomerExcludingAssessedTax")
                 ebitda        = get_latest_value(facts, "OperatingIncomeLoss")
@@ -831,7 +832,7 @@ def all_values(all_dfs_clean):
                     "ticker":            t,
                     "market cap":        market_cap,
                     "net debt":          net_debt,
-                    "minority interest": 0,
+                    "minority interest": minority_interest,
                     "enterprise value":  enterprise_value,
                     "total revenue":     total_revenue,
                     "ebitda":            ebitda,
