@@ -152,6 +152,7 @@ if st.button("Run"):
             
             
     st.write("")  
+    st.write("")
     st.header("Sensitivity table")    
     df = sensitivity_accretion_dilution(
         acq_dict, tgt_dict,

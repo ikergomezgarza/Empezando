@@ -788,7 +788,7 @@ def clean_dfs(all_dfs, ticker):
                 
     return all_dfs
 
-def all_values(all_dfs_clean, ticker):
+def all_values(all_dfs_clean):
    
     table_dfs = {}
 
@@ -949,6 +949,33 @@ def relative_valuation(ticker):
     all_dataframes = all_values(all_dfs_clean, ticker)
     print("Company all values done")
     build_table(all_dataframes, ticker)
+    
+def streamlit_df(all_dataframes, ticker):
+    
+    streamlit_dfs={}
+    for i in all_dataframes:
+        df= all_dataframes[i]
+        df = df.set_index("ticker")
+
+        df = df.drop(columns=["shares", "price"])
+        stocks  = df.loc[ticker]
+        means   = df.mean(numeric_only=True)
+        medians = df.median(numeric_only=True)
+        expected  = df.loc[ticker].copy()
+        expected["enterprise value"]= stocks["ebitda"] * medians["ev/ebitda"]
+        expected["market cap"]= expected["enterprise value"] - stocks["net debt"] - stocks["minority interest"]
+        expected["ev/ebitda"]= medians["ev/ebitda"]
+        expected["ev/revenue"]= expected["enterprise value"] / expected["total revenue"]
+
+        comparison_df = pd.DataFrame({
+            "Mean":     means,
+            "Median":   medians,
+            ticker:     stocks,
+            "Expected": expected,
+        }).T
+        streamlit_dfs[i]=comparison_df
+    
+    return streamlit_dfs
     
 
 # ── P7: DCF model ────────────────────────────────────────────────────────────────
