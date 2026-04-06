@@ -1222,7 +1222,6 @@ def calculate_beta(ticker, period="1y"):
         params = {"timeframe": "1Day", "start": start, "end": end, "limit": 1000, "feed": "iex"}
         r      = requests.get(url, headers=alpaca_headers, params=params)
         bars   = r.json().get("bars", [])
-        print(f"{t}: {len(bars)} bars")  # debug
         return pd.Series({b["t"]: b["c"] for b in bars})
 
     stock_prices = get_prices(ticker)
@@ -1283,7 +1282,7 @@ def DCF_Model(ticker, verbose= False, g=.1):
     
     WACC= get_wacc(c_data, verbose= verbose)
     
-    enterprise_value= discount_FCF_WACC( fcf_list, WACC, g=g, verbose=verbose, g_longterm=.025)
+    enterprise_value= discount_FCF_WACC( fcf_list, WACC, verbose=verbose, g_longterm=.025)
     
     intrinsic_price= final_details(c_data, enterprise_value, verbose= verbose)
 
