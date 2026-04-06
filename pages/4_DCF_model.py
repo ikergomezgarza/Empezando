@@ -30,7 +30,7 @@ if st.button("Run"):
     
         WACC= get_wacc(c_data, equity_risk_premium=equity_risk_premium, verbose=True )
     
-        enterprise_value= discount_FCF_WACC( fcf_list, WACC, g_longterm=.025, verbose=True)
+        enterprise_value= discount_FCF_WACC( fcf_list, WACC, g_longterm=g_longterm, verbose=True)
         
         TV      = terminal_value(fcf_list[-1], WACC, g_longterm= g_longterm)
     
@@ -93,5 +93,5 @@ if st.button("Run"):
         st.write(f"Enterprise value:         {(c_data["market_cap"] + c_data["total_debt"])/1e6:,.1f}M")
         st.write(f"WACC:                     {WACC:.1%}")
         
-        df = sensitivity_DCF(ticker, verbose=False)
+        df = sensitivity_DCF(ticker, year=year, verbose=False)
         st.dataframe(df, use_container_width=True)

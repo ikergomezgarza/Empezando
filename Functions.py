@@ -1237,7 +1237,7 @@ def calculate_beta(ticker, period="1y"):
 
 
          
-def sensitivity_DCF(ticker, verbose= False):
+def sensitivity_DCF(ticker, year=5,equity_risk_premium=.025,g_longterm=0.025, verbose= False):
 
     total=[]
     c_data= get_company_dcf_data(ticker, verbose= verbose)
@@ -1252,8 +1252,8 @@ def sensitivity_DCF(ticker, verbose= False):
         
         for j in wacc_vals:
             
-            fcf_list= forecast_unlevered_FCF(c_data, g= i,verbose= False)
-            enterprise_value= discount_FCF_WACC( fcf_list, WACC= j, verbose=False, g_longterm=.025)
+            fcf_list= forecast_unlevered_FCF(c_data, g= i, year= year,verbose= False)
+            enterprise_value= discount_FCF_WACC( fcf_list, WACC= j, verbose=False, g_longterm=g_longterm)
             intrinsic_price= final_details(c_data, enterprise_value, verbose= False)
             rows.append(round(intrinsic_price, 2))
 
