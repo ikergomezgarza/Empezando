@@ -960,7 +960,7 @@ def streamlit_df(all_dataframes, ticker):
         
         if "ticker" in df.columns:
             df = df.set_index("ticker")
-        df = df.drop(columns=["shares", "price"])
+        df = df.drop(columns=["shares", "price"], errors="ignore")
         
         stocks   = df.loc[ticker]
         means    = df.mean(numeric_only=True)
