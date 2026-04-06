@@ -788,50 +788,65 @@ def clean_dfs(all_dfs, ticker):
                 
     return all_dfs
 
-@st.cache_data(ttl=3600)
+
 def all_values(all_dfs_clean):
-   
+
+    alpaca_headers = {
+        "APCA-API-KEY-ID":     ALPACA_KEY,
+        "APCA-API-SECRET-KEY": ALPACA_SECRET
+    }
+
+    def get_alpaca_price(ticker):
+        try:
+            url = f"https://data.alpaca.markets/v2/stocks/{ticker}/snapshot"
+            r = requests.get(url, headers=alpaca_headers)
+            return r.json().get("latestTrade", {}).get("p")
+        except Exception:
+            return None
+
     table_dfs = {}
 
-    for key in all_dfs_clean: 
+    for key in all_dfs_clean:
         table = []
-        for t in all_dfs_clean[key]:  # t is each ticker string
+        for t in all_dfs_clean[key]:
             try:
-                
-                yfin = yf.Ticker(t).info
-                market_cap = yfin.get('marketCap')
-                total_debt = yfin.get('totalDebt', 0)
-                total_cash = yfin.get('totalCash', 0)
-                net_debt = total_debt - total_cash
-                enterprise_value = yfin.get('enterpriseValue')
-                minority_interest = enterprise_value - market_cap - net_debt
-                total_revenue = yfin.get('totalRevenue')
-                ebitda = yfin.get('ebitda')
-                ev_revenue = enterprise_value / total_revenue
-                ev_ebitda = enterprise_value / ebitda
-                shares= yfin.get("sharesOutstanding")
-                price=yfin.get("previousClose")
-                
+                facts         = get_facts(t)
+                total_debt    = get_latest_value(facts, "LongTermDebt")
+                total_cash    = get_latest_value(facts, "CashAndCashEquivalentsAtCarryingValue")
+                total_revenue = get_latest_value(facts, "Revenues") or get_latest_value(facts, "RevenueFromContractWithCustomerExcludingAssessedTax")
+                ebitda        = get_latest_value(facts, "OperatingIncomeLoss")
+                shares        = get_latest_value(facts, "CommonStockSharesOutstanding")
+                price         = get_alpaca_price(t)
+
+                if not all([price, shares, total_revenue, ebitda]):
+                    continue
+
+                net_debt         = total_debt - total_cash
+                market_cap       = price * shares
+                enterprise_value = market_cap + net_debt
+                ev_revenue       = enterprise_value / total_revenue if total_revenue else None
+                ev_ebitda        = enterprise_value / ebitda if ebitda else None
+
                 temporal_dict = {
-                    "ticker": t,  # peer ticker not subject
-                    'market cap': market_cap,
-                    'net debt': net_debt,
-                    'minority interest': minority_interest,
-                    'enterprise value': enterprise_value,
-                    'total revenue': total_revenue,
-                    'ebitda': ebitda,
-                    'ev/revenue': ev_revenue,
-                    'ev/ebitda': ev_ebitda, 
-                    'shares':shares,
-                    'price':price
-  
-            }
-                
+                    "ticker":            t,
+                    "market cap":        market_cap,
+                    "net debt":          net_debt,
+                    "minority interest": 0,
+                    "enterprise value":  enterprise_value,
+                    "total revenue":     total_revenue,
+                    "ebitda":            ebitda,
+                    "ev/revenue":        ev_revenue,
+                    "ev/ebitda":         ev_ebitda,
+                    "shares":            shares,
+                    "price":             price,
+                }
+
             except Exception:
-                continue 
+                continue
             table.append(temporal_dict)
-        
+
         table_dfs[key] = pd.DataFrame(table)
+
     return table_dfs
 
 def build_table(all_dataframes, ticker):
