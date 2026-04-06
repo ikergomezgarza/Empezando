@@ -788,6 +788,7 @@ def clean_dfs(all_dfs, ticker):
                 
     return all_dfs
 
+@st.cache_data(ttl=3600)
 def all_values(all_dfs_clean):
    
     table_dfs = {}
