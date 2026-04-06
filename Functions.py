@@ -975,6 +975,7 @@ def streamlit_df(all_dataframes, ticker):
         }).T
         streamlit_dfs[i]=comparison_df
     
+    
     return streamlit_dfs
     
 
