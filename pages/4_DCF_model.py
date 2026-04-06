@@ -12,8 +12,8 @@ g_longterm=             .025
 
 ticker = st.text_input("Calculate DCF of:", "AAPL")
 
+modify_parameters= st.toggle("Modify parameters")
 if modify_parameters:
-    
     year=                  st.slider("Years to discount",             0, 15,        5,   step= 1)
     g=                     st.slider("Company growth",                0.0, 0.2,     0.05,   step= .01)
     g_longterm=            st.slider("Growth long term",              0.0, 0.2,     0.025,  step= .005)
