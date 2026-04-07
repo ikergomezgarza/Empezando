@@ -9,6 +9,9 @@ import yfinance as yf
 import requests
 import time
 import random
+from scipy.stats import norm
+import math
+import matplotlib.pyplot as plt
 HEADERS = {"User-Agent": "ikergogiga@gmail.com"}
 import os
 from dotenv import load_dotenv
@@ -1294,3 +1297,55 @@ def DCF_Model(ticker, verbose= False, g=.1):
     sensitivity_DCF(ticker, verbose= verbose)
 
     return intrinsic_price
+
+# ── P8 Greeks ────────────────────────────────────────────────────────────────
+
+class BlackScholes:
+    def __init__(self, S, K, T, r, o, call= True):
+        
+        self.S = S
+        self.K = K
+        self.T = T/365
+        self.r = r
+        self.o = o
+        self.call = call
+        
+        self.d1 = (math.log(S/K) + (r + (o**2)/2) * self.T)/ (o * math.sqrt(self.T))
+        self.d2 = self.d1 - o * math.sqrt(self.T)
+        self.disc = math.exp(-r * self.T)
+        
+    def delta(self):
+        if self.call:
+            return norm.cdf(self.d1) 
+        return norm.cdf(self.d1) - 1
+    
+    def gamma(self):
+        return norm.pdf(self.d1)/ (self.S * self.o * math.sqrt(self.T))
+    
+    def theta(self):
+        base= (-self.S * norm.pdf(self.d1) * self.o / (2 * math.sqrt(self.T)))
+        if self.call:
+            return base - (self.r * self.K * math.exp(-self.r * self.T) * norm.cdf(self.d2))  
+        return     base + (self.r * self.K * math.exp(-self.r * self.T) * norm.cdf(-self.d2))
+    
+    def vega(self):
+        return  self.S * norm.pdf(self.d1) * math.sqrt(self.T)
+    
+    def rho(self):
+        if self.call:
+            return self.K * self.T * math.exp(-self.r * self.T) * norm.cdf(self.d2)
+        return    -self.K * self.T * math.exp(-self.r * self.T) * norm.cdf(-self.d2)
+    
+    def price(self):
+        if self.call:
+            return self.S * norm.cdf(self.d1) - self.K * self.disc * norm.cdf(self.d2)
+        return self.K * self.disc * norm.cdf(-self.d2) - self.S * norm.cdf(-self.d1)
+    
+    def greeks(self):
+        return {
+        "delta": self.delta(),
+        "gamma": self.gamma(),
+        "theta": self.theta(), 
+        "vega": self.vega(),
+        "rho": self.rho(),
+        "price": self.price()}

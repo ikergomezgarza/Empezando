@@ -8,3 +8,5 @@ scipy
 python-dotenv
 requests
 python-dotenv
+scipy
+matplotlib
