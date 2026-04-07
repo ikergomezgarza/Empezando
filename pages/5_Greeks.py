@@ -29,14 +29,14 @@ with col1:
     
 with col2:
     
-    prices= np.linspace(int(S * 3/4), int(S* 5/4), int(S*1/2)+1)
+    @st.cache_data
+    def compute_prices(S, K, T, r, o, call):
+        prices = np.linspace(int(S * 3/4), int(S * 5/4), 200)
+        vals = [BlackScholes(s, K, T, r, o, call=call).price() for s in prices]
+        return prices, vals
 
-    vals=[]
-
-    for i in range(len(prices)):
-        bs = BlackScholes(prices[i], K, T, r, o, call=call)
-        vals.append(bs.price())
-
+    prices, vals = compute_prices(S, K, T, r, o, call)
+    
     fig, ax = plt.subplots()
     ax.plot(prices,vals)
 
