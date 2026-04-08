@@ -111,5 +111,4 @@ st.dataframe(chain.style.apply(highlight_in_money, axis=1)
                         .format("{:.2f}"),
                         hide_index=True)
 
-
-
+st.page_link("main.py", label="Back to Home")

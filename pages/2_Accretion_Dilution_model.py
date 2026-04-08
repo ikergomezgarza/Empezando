@@ -166,3 +166,5 @@ if st.button("Run"):
         years=years
     )
     st.dataframe(df.style.format("{:.2f}%").map(highlight_irr_accdil))
+    
+st.page_link("main.py", label="Back to Home")

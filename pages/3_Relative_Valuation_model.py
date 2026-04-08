@@ -43,3 +43,4 @@ if st.button("Run"):
             use_container_width=True
         )
 
+st.page_link("main.py", label="Back to Home")

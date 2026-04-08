@@ -170,3 +170,5 @@ if st.button("Run"):
 
         df = compare_entries_exits(c_name, params)
         st.dataframe(df.style.format("{:.1f}%").map(highlight_irr))
+        
+st.page_link("main.py", label="Back to Home")

@@ -95,3 +95,5 @@ if st.button("Run"):
         
         df = sensitivity_DCF(ticker, year=year,g_longterm=g_longterm, verbose=False)
         st.dataframe(df, use_container_width=True)
+        
+st.page_link("main.py", label="Back to Home")
