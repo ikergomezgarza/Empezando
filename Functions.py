@@ -1341,11 +1341,59 @@ class BlackScholes:
             return self.S * norm.cdf(self.d1) - self.K * self.disc * norm.cdf(self.d2)
         return self.K * self.disc * norm.cdf(-self.d2) - self.S * norm.cdf(-self.d1)
     
+    def bid_ask(self, spread=0.05):
+        mid = self.price()
+        return {
+            "mid" : mid,
+            "bid" : mid - spread / 2,
+            "ask" : mid + spread / 2
+        }
+    
     def greeks(self):
         return {
         "delta": self.delta(),
         "gamma": self.gamma(),
         "theta": self.theta(), 
         "vega": self.vega(),
-        "rho": self.rho(),
-        "price": self.price()}
+        "rho": self.rho()
+        }
+        
+    def opcion_chain_values(self):
+        return {
+        "delta": self.delta(),
+        "gamma": self.gamma(),
+        "theta": self.theta(), 
+        "vega": self.vega(),
+        "bid": self.bid_ask()["bid"],
+        "ask": self.bid_ask()["ask"]
+        }
+        
+def opcion_chain(S, K, T, r, o, spacing= 2.5):
+    
+    start = int(S * 0.5) - (int(S * 0.5) % spacing)
+    Ks = np.arange(start, round(S * 1.5), spacing)
+    call_vals = [BlackScholes(S, k, T, r, o, call=True).opcion_chain_values() for k in Ks]
+    df_calls= pd.DataFrame(call_vals, index=Ks.round(1))
+    
+
+    put_vals = [BlackScholes(S, k, T, r, o, call=False).opcion_chain_values() for k in Ks]
+    df_puts= pd.DataFrame(put_vals, index=Ks.round(1))
+    df_puts= df_puts[df_puts.columns[::-1]]
+    
+    df_calls.columns = [c + " (c)" for c in df_calls.columns]
+    df_puts.columns  = [c + " (p)" for c in df_puts.columns]
+    df_strike = pd.DataFrame({"strike": Ks.round(1)}, index=Ks.round(1))
+
+    chain= pd.concat([df_calls,df_strike, df_puts], axis= 1)
+    
+    closest = np.argsort(np.abs(Ks - S))[:11]
+    closest = np.sort(closest)
+    chain = chain.iloc[closest]
+
+    
+    return chain
+
+def highlight_opt_chain(row):
+    if row["strike"] == K:
+        return ["background-color: rgba(255,255,0,0.2)"] * len(row)
+    return [""] * len(row)
