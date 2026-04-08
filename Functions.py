@@ -8,6 +8,7 @@ import numpy as np
 import yfinance as yf
 import requests
 import time
+from datetime import datetime, timedelta
 import random
 from scipy.stats import norm
 import math
@@ -1237,9 +1238,7 @@ def calculate_beta(ticker, period="1y"):
     variance   = df["market"].var()
 
     return covariance / variance
-
-
-         
+      
 def sensitivity_DCF(ticker, year=5,equity_risk_premium=.025,g_longterm=0.025, verbose= False):
 
     total=[]
@@ -1397,3 +1396,23 @@ def highlight_opt_chain(row):
     if row["strike"] == K:
         return ["background-color: rgba(255,255,0,0.2)"] * len(row)
     return [""] * len(row)
+
+def get_prices_opcions(ticker, days=252):
+    url = f"https://data.alpaca.markets/v2/stocks/{ticker}/bars"
+    start = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
+    params = {
+        "timeframe": "1Day",
+        "limit": days,
+        "start": start,  # ← add this
+        "feed": "iex"           # ← add this, free tier
+    }
+    headers = {"APCA-API-KEY-ID": ALPACA_KEY, "APCA-API-SECRET-KEY": ALPACA_SECRET}
+    
+    r = requests.get(url, params=params, headers=headers)
+    bars = r.json().get("bars")
+    
+    if not bars:
+        st.error(f"No data found for ticker: {ticker}")
+        st.stop()
+    
+    return [bar["c"] for bar in bars]
