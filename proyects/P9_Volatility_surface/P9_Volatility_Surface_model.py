@@ -91,7 +91,7 @@ def smile_vol(surface_df, S):
     
     fig, ax = plt.subplots()
     ax.plot(smile["strike"], smile["iv"])
-    ax.axvline(x=S, color="red", linestyle="--", alpha=0.7, label=f"S = {S}"
+    ax.axvline(x=S, color="red", linestyle="--", alpha=0.7, label=f"S = {S}")
     ax.set_xlabel("Strike")
     ax.set_ylabel("IV")
     ax.set_title(f"Vol Smile — {next_1[0]}")

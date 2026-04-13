@@ -11,6 +11,7 @@ modify_parameters= False
 
 ticker = st.text_input("Ticker for the Option Volatility:", "AAPL")
 
+
 data       = get_all_chains(ticker)
 df         = parse_chain(data)
 prices     = get_prices_opcions(ticker)
@@ -31,15 +32,23 @@ surface_df  = filter_surface_df(df, S, **params)
 surface_fig = surface_vol_builder(surface_df)
 smile_fig   = smile_vol(surface_df, S)
 
-st.write("")
-st.title("Volatility Surface")
-st.write("")
-st.write("Contrary to the Black Scholes model the volatility is not constant across diferent strike prices")
-st.write("The closer to in the money the higher the lower the volatility it has, and also the longer the time to expiracie the more volatility the price can be")
+if st.button("Run Model"):
+    with st.spinner("Building the Volatility surface..."):
+        st.write("")
+        st.title("Volatility Surface")
+        st.write("")
+        st.write("Contrary to the Black Scholes model the volatility is not constant across diferent strike prices")
+        st.write("The closer to in the money the higher the lower the volatility it has, and also the longer the time to expiracie the more volatility the price can be")
+        st.write("(If the 3d graph looks incomplete try reducing the number of expiracies contracts or the strike range)")
 
-st.plotly_chart(surface_fig, use_container_width=True)
+        st.plotly_chart(surface_fig, use_container_width=True)
+        st.write("(If the 3d graph looks incomplete try reducing the number of expiracies contracts or the strike range)")
+        st.write("")
+        
+        st.title("The Smile")
+        st.write("")
+        st.write("The left side (OTM puts) has higher volatility because investors buys puts as protection,so there is more demand there for more upside or downside swings, and calls OTM are not as bought ")
+        st.plotly_chart(smile_fig, use_container_width=True)
 
-st.title("The Smile")
 st.write("")
-st.write("The left side (OTM puts) has higher volatility because investors buys puts as protection,so there is more demand there for more upside or downside swings, and calls OTM are not as bought ")
-st.plotly_chart(smile_fig, use_container_width=True)
+st.page_link("main.py", label="Back to Home")
