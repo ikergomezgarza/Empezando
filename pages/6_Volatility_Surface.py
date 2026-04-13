@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 import re
 import matplotlib.pyplot as plt
-from Functions import get_prices_opcions, get_all_chains, parse_chain, filter_surface_df, surface_vol_builder, smile_vol, other_surface_builder, surface_plotly
+from Functions import get_prices_opcions, get_all_chains, parse_chain, filter_surface_df, surface_vol_builder, smile_vol
+#from Functions import other_surface_builder, surface_plotly
 
 
 
@@ -50,12 +51,12 @@ st.write("The left side (OTM puts) has higher volatility because investors buys 
 st.plotly_chart(smile_fig, use_container_width=True)
 
 st.write("")
-st.write("")
-st.write("Looking at other ways to plot, have to refine the data colecting for more smooth curvature")
-fig = other_surface_builder(surface_df)
-st.pyplot(fig)
+#st.write("")
+#st.write("Looking at other ways to plot, have to refine the data colecting for more smooth curvature")
+#fig = other_surface_builder(surface_df)
+#st.pyplot(fig)
 
-fig = surface_plotly(surface_df)
-st.plotly_chart(fig, use_container_width=True)
+#fig = surface_plotly(surface_df)
+#st.plotly_chart(fig, use_container_width=True)
 
 st.page_link("main.py", label="Back to Home")
