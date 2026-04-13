@@ -19,7 +19,6 @@ from dotenv import load_dotenv
 import streamlit as st
 import re
 import plotly.graph_objects as go
-from IPython.display import display
 
 load_dotenv()
 ALPACA_KEY    = st.secrets.get("ALPACA_KEY") or os.getenv("ALPACA_KEY")
