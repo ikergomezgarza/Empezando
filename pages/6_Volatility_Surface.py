@@ -2,7 +2,6 @@ import requests
 import streamlit as st
 import re
 import plotly.graph_objects as go
-from IPython.display import display
 import pandas as pd
 import re
 import matplotlib.pyplot as plt
