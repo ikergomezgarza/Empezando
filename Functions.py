@@ -1521,3 +1521,63 @@ def full_surface_pipeline(ticker, **kwargs):
     smile_fig   = smile_vol(surface_df)
     
     return surface_fig, smile_fig, surface_df
+
+def other_surface_builder(surface_df):
+    
+    plt.ion()
+    fig= plt.figure(figsize=(16,9))
+    fig.canvas.manager.set_window_title("volatility Surface")
+    fig.patch.set_facecolor("#0b0d0f")
+    
+    ax_3d= plt.subplot2grid((1,3),(0,0), projection="3d")
+    
+    pivot = surface_df.pivot_table(index="expiry", columns="strike", values="iv").sort_index().sort_index(axis=1)
+    pivot= pivot.interpolate(method= "linear", axis= 0).bfill().ffill()
+    
+    X, Y_idx = np.meshgrid( pivot.columns, np.arange(len(pivot.index)))
+    Z= pivot.values
+    
+    curr_elev, curr_azim= ax_3d.elev, ax_3d.azim
+    
+    ax_3d.clear()
+    ax_3d.set_facecolor("#0b0d0f")
+    ax_3d.plot_surface(X, Y_idx, Z,cmap="magma", edgecolor= "white", lw=.1, alpha=.9)
+    
+    ax_3d.set_yticks(np.arange(len(pivot.index)))
+    ax_3d.set_yticklabels(pivot.index)
+    ax_3d.set_title("Volatility model", color="white")
+    ax_3d.view_init(elev= curr_elev, azim= curr_azim)
+    
+    return fig
+
+def surface_plotly(surface_df):
+
+    pivot = surface_df.pivot_table(index="expiry", columns="strike", values="iv").sort_index().sort_index(axis=1)
+    pivot = pivot.interpolate(method="linear", axis=0).bfill().ffill()
+
+    X = pivot.columns.values
+    Y = np.arange(len(pivot.index))
+    Z = pivot.values
+
+    fig = go.Figure(data=[go.Surface(
+        z=Z,
+        x=X,
+        y=Y,
+        colorscale="Magma"
+    )])
+
+    fig.update_layout(
+        scene=dict(
+            xaxis_title="Strike",
+            yaxis_title="Expiry",
+            zaxis_title="IV",
+            yaxis=dict(
+                tickmode="array",
+                tickvals=Y,
+                ticktext=pivot.index.astype(str)
+            )
+        ),
+        margin=dict(l=0, r=0, t=40, b=0)
+    )
+
+    return fig
