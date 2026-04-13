@@ -1297,7 +1297,7 @@ def DCF_Model(ticker, verbose= False, g=.1):
 
     return intrinsic_price
 
-# ── P8 Greeks ────────────────────────────────────────────────────────────────
+# ── P8 Black Scholes ────────────────────────────────────────────────────────────────
 
 class BlackScholes:
     def __init__(self, S, K, T, r, o, call= True):
@@ -1416,3 +1416,5 @@ def get_prices_opcions(ticker, days=252):
         st.stop()
     
     return [bar["c"] for bar in bars]
+
+# ── P9 Volatility Surface ────────────────────────────────────────────────────────────────
