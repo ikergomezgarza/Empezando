@@ -1459,8 +1459,7 @@ def filter_surface_df(df, S, strike_range= .05, n_expiracies= 10):
     df = df[df["iv"] > 0]
     
     next_10 = sorted(df["expiry"].unique())
-    
-    next_10 = next_10[:n_expiracies] if n_expiracies <= len(next_10) else next_10
+    next_10 = next_10[:n_expiracies] 
     
     df = df[df["expiry"].isin(next_10)]
     
@@ -1473,10 +1472,8 @@ def filter_surface_df(df, S, strike_range= .05, n_expiracies= 10):
     return surface_df
 
 def surface_vol_builder(surface_df):
-     
-    surface_df["days"] = (pd.to_datetime(surface_df["expiry"]) - pd.Timestamp.today()).dt.days
 
-    pivot = surface_df.pivot_table(index="days", columns="strike", values="iv")
+    pivot = surface_df.pivot_table(index="expiry", columns="strike", values="iv").interpolate(method= "linear", axis= 0).bfill().ffill()
 
     fig = go.Figure(data=[go.Surface(
         x=pivot.columns.values,  # strikes
