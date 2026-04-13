@@ -13,7 +13,7 @@ load_dotenv()
 ALPACA_KEY    = st.secrets.get("ALPACA_KEY") or os.getenv("ALPACA_KEY")
 ALPACA_SECRET = st.secrets.get("ALPACA_SECRET") or os.getenv("ALPACA_SECRET")
 
-st.title("Greeks")
+st.title("Black Scholes")
 st.write("")
 
 ticker = st.text_input("Ticker for the Option chain:", "AAPL")
