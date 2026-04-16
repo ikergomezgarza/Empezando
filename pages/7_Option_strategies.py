@@ -138,7 +138,7 @@ with col1:
         breaks_evens = ", ".join(map(str, contracts.break_even()))
         st.write(f"Max loss: {contracts.max_loss()}")
         st.write(f"Max porfit: {contracts.max_profit()}")
-        st.write(f" Break even: {breaks_evens}")
+        st.info(f" Break even: {breaks_evens}")
         
        #"st.info(f"Max loss: {contracts.max_loss()}, ax porfit: {contracts.max_profit()}, Break even: {breaks_evens}")
 
