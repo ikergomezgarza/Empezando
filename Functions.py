@@ -1680,8 +1680,20 @@ class OptionPricing:
     
     def break_even(self):
         spots, pnls = self.get_spots()
-        break_even_pos= np.where(np.diff(np.signbit(pnls)))[0]
-        return spots[break_even_pos]
+        bes = []
+
+        for i in range(len(spots) - 1):
+            if pnls[i] == 0:
+                bes.append(spots[i])
+            elif pnls[i] * pnls[i+1] < 0:
+                # linear interpolation
+                x1, x2 = spots[i], spots[i+1]
+                y1, y2 = pnls[i], pnls[i+1]
+
+                be = x1 - y1 * (x2 - x1) / (y2 - y1)
+                bes.append(be)
+
+        return bes
     
     def resume(self):
         print(f"max loss: {self.max_loss()}, max profit: {self.max_profit()}, break even: {self.break_even()}")
