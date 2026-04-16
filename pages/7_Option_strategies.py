@@ -107,7 +107,7 @@ for key, i in user_input:
         if item not in st.session_state.selections:
             st.session_state.selections.append(item)
 
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([4,1])
 with col2:
     if st.button("Reset options to buy"):
         st.session_state.selections = []
