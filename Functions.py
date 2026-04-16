@@ -1663,9 +1663,9 @@ class OptionPricing:
         return self.payoff(spot) - self.net_premium()
     
     def get_spots(self):
-        df= self.md.df
-        spots= df["strike"].values
-        pnls= [self.PnL(spot) for spot in spots]
+        S = self.md.S
+        spots = np.linspace(S * 0.5, S * 1.5, 500)
+        pnls = [self.PnL(spot) for spot in spots]
         return spots, pnls
     
     def max_loss(self):
