@@ -125,7 +125,7 @@ for i in st.session_state.get("selections", []):
 contracts= OptionPricing(md, st.session_state.selections)
 
 st.write("")
-col1, col2= st.columns([1,4])
+col1, col2= st.columns([1,3])
 with col2:
     fig= contracts.plot_stremlit()
     st.plotly_chart(fig, use_container_width=True)
