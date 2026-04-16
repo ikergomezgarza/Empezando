@@ -1802,3 +1802,4 @@ class MarketData:
         self.rate = get_risk_free_rate()
         self.expiries = self.df["expiry"].unique()
         return self   
+    

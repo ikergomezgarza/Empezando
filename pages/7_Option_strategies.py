@@ -122,5 +122,3 @@ contracts= OptionPricing(md, st.session_state.selections)
 
 fig= contracts.plot_stremlit()
 st.plotly_chart(fig, use_container_width=True)
-
-
