@@ -17,7 +17,7 @@ load_dotenv()
 ALPACA_KEY    = st.secrets.get("ALPACA_KEY") or os.getenv("ALPACA_KEY")
 ALPACA_SECRET = st.secrets.get("ALPACA_SECRET") or os.getenv("ALPACA_SECRET")
 
-st.title("option strategies")
+st.title("Option strategies")
 st.write("")
 
 col1,col2= st.columns(2)
