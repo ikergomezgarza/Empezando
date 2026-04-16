@@ -446,7 +446,7 @@ def highlight_irr(val):
 
 # ── P5: Accretion dilution Model ────────────────────────────────────────────────────────────────
 @st.cache_data
-def get_price(ticker):
+def get_price(ticker, days=252):
     url = f"https://data.alpaca.markets/v2/stocks/{ticker}/bars"
     start = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
     params = {
