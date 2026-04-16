@@ -130,7 +130,7 @@ contracts= OptionPricing(md, st.session_state.selections)
 fig= contracts.plot_stremlit()
 st.plotly_chart(fig, use_container_width=True)
 
-if not st.session_state.selections:
+if len(st.session_state.selections) != 0:
     st.markdown(f"Max loss: {contracts.max_loss()}, Max porfit: {contracts.max_profit()}, Break even: {contracts.break_even()}")
 
 
