@@ -114,16 +114,11 @@ if st.button("Reset options to buy"):
 st.write("")
 st.write(f"Current orders: {ticker}")
 
-for i in st.session_state.selections:
-    cont= "Call"
-    if i["call"]== False:
-        cont= "Put"
-        
-    trd= "Buy"
-    if i["trade"] == -1:
-        trd== "Sell"
+for i in st.session_state.get("selections", []):
+    cont = "Call" if i.get("call", True) else "Put"
+    trd = "Sell" if i.get("trade", 1) == -1 else "Buy"
     
-    #st.info(f"{trd} a  {i["strike"]} {cont} option at {i["premium"]}$ that expires in {i["day"]} day")
+    st.info(f"{trd} a  {i["strike"]} {cont} option at {i["premium"]}$ that expires in {i["day"]} day")
 
 contracts= OptionPricing(md, st.session_state.selections)
 
