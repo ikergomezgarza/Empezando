@@ -463,6 +463,7 @@ def get_companys_datas(acq, tgt, verbose=False):
         
         # Price from Alpha Vantage
         price = get_price(ticker_str)
+        print(f"theeeeee priceeee is {price}")
         
         # Shares from EDGAR
         shares = get_latest_value(facts, "CommonStockSharesOutstanding")
