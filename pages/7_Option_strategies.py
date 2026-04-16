@@ -127,12 +127,20 @@ for i in st.session_state.selections:
 
 contracts= OptionPricing(md, st.session_state.selections)
 
-fig= contracts.plot_stremlit()
-st.plotly_chart(fig, use_container_width=True)
+col1, col2= st.columns([1,4])
 
-if len(st.session_state.selections) != 0:
-    breaks_evens = ", ".join(map(str, contracts.break_even()))
-    st.info(f"Max loss: {contracts.max_loss()}, Max porfit: {contracts.max_profit()}, Break even: {breaks_evens}")
+with col2:
+    fig= contracts.plot_stremlit()
+    st.plotly_chart(fig, use_container_width=True)
+
+with col1:
+    if len(st.session_state.selections) != 0:
+        breaks_evens = ", ".join(map(str, contracts.break_even()))
+        st.write(f"Max loss: {contracts.max_loss()}")
+        st.write(f"Max porfit: {contracts.max_profit()}")
+        st.write(f" Break even: {breaks_evens}")
+        
+       #"st.info(f"Max loss: {contracts.max_loss()}, ax porfit: {contracts.max_profit()}, Break even: {breaks_evens}")
 
 st.write("")
 st.page_link("main.py", label="Back to Home")
