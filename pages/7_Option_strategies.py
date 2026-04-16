@@ -112,7 +112,7 @@ if st.button("Reset options to buy"):
 
 #st.write(st.session_state.selections)
 st.write("")
-st.write(f"Current orders: {ticker}")
+st.info(f"Current orders: {ticker}")
 
 for i in st.session_state.selections:
     cont= "Call"
