@@ -445,7 +445,7 @@ def highlight_irr(val):
 
 
 # ── P5: Accretion dilution Model ────────────────────────────────────────────────────────────────
-
+@st.cache_data
 def get_price(ticker):
     url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes/latest"
     headers = {
@@ -1776,7 +1776,6 @@ class OptionPricing:
         plt.ylabel("P&L")
 
         plt.show()
-
      
 def chain_buy_sell(results, date):
 
