@@ -447,14 +447,24 @@ def highlight_irr(val):
 # ── P5: Accretion dilution Model ────────────────────────────────────────────────────────────────
 @st.cache_data
 def get_price(ticker):
-    url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes/latest"
-    headers = {
-        "APCA-API-KEY-ID": ALPACA_KEY,
-        "APCA-API-SECRET-KEY": ALPACA_SECRET
+    url = f"https://data.alpaca.markets/v2/stocks/{ticker}/bars"
+    start = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
+    params = {
+        "timeframe": "1Day",
+        "limit": days,
+        "start": start,  # ← add this
+        "feed": "iex"           # ← add this, free tier
     }
-    r = requests.get(url, headers=headers)
-    data = r.json()
-    return float(data["quote"]["ap"])
+    headers = {"APCA-API-KEY-ID": ALPACA_KEY, "APCA-API-SECRET-KEY": ALPACA_SECRET}
+    
+    r = requests.get(url, params=params, headers=headers)
+    bars = r.json().get("bars")
+    
+    if not bars:
+        st.error(f"No data found for ticker: {ticker}")
+        st.stop()
+    prices= [bar["c"] for bar in bars]
+    return prices[-1]
 
 def get_companys_datas(acq, tgt, verbose=False):
     
@@ -463,7 +473,6 @@ def get_companys_datas(acq, tgt, verbose=False):
         
         # Price from Alpha Vantage
         price = get_price(ticker_str)
-        print(f"theeeeee priceeee is {price}")
         
         # Shares from EDGAR
         shares = get_latest_value(facts, "CommonStockSharesOutstanding")
