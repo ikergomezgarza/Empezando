@@ -1776,7 +1776,8 @@ class OptionPricing:
         plt.ylabel("P&L")
 
         plt.show()
-        
+
+     
 def chain_buy_sell(results, date):
 
     df= results
@@ -1799,7 +1800,6 @@ def chain_buy_sell(results, date):
  
 class MarketData:
 
-    st.cache_data
     def __init__(self, ticker):
         self.ticker = ticker
         self.S = None
@@ -1807,7 +1807,6 @@ class MarketData:
         self.rate = None
         self.expiries = None
 
-    st.cache_data
     def load(self):
         self.S = get_prices_opcions(self.ticker)[-1]
         self.df = parse_chain(get_all_chains(self.ticker))
