@@ -131,7 +131,8 @@ fig= contracts.plot_stremlit()
 st.plotly_chart(fig, use_container_width=True)
 
 if len(st.session_state.selections) != 0:
-    st.markdown(f"Max loss: {contracts.max_loss()}, Max porfit: {contracts.max_profit()}, Break even: {float(contracts.break_even())}")
+    breaks_evens = ", ".join(map(str, contracts.break_even()))
+    st.markdown(f"Max loss: {contracts.max_loss()}, Max porfit: {contracts.max_profit()}, Break even: {breaks_evens}")
 
 
 st.page_link("main.py", label="Back to Home")
