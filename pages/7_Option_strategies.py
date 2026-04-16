@@ -123,7 +123,6 @@ for i in st.session_state.selections:
     if i["trade"] == -1:
         trd== "Sell"
     
-    st.write("debug")
     st.info(f"{trd} a  {i["strike"]} {cont} option at {i["premium"]}$ that expires in {i["day"]} day")
 
 contracts= OptionPricing(md, st.session_state.selections)
@@ -137,8 +136,8 @@ with col2:
 with col1:
     if len(st.session_state.selections) != 0:
         breaks_evens = ", ".join(map(str, contracts.break_even()))
-        st.write(f"Max loss: {contracts.max_loss()}")
-        st.write(f"Max porfit: {contracts.max_profit()}")
+        st.error(f"Max loss: {contracts.max_loss()}")
+        st.success(f"Max porfit: {contracts.max_profit()}")
         st.info(f" Break even: {breaks_evens}")
         
        #"st.info(f"Max loss: {contracts.max_loss()}, ax porfit: {contracts.max_profit()}, Break even: {breaks_evens}")
