@@ -21,9 +21,9 @@ import re
 import plotly.graph_objects as go
 
 load_dotenv()
-ALPACA_KEY    = st.secrets.get("ALPACA_KEY") or os.getenv("ALPACA_KEY")
-ALPACA_SECRET = st.secrets.get("ALPACA_SECRET") or os.getenv("ALPACA_SECRET")
-FRED_KEY = st.secrets.get("FRED_KEY") or os.getenv("FRED_KEY")
+ALPACA_KEY    =  os.getenv("ALPACA_KEY")
+ALPACA_SECRET =  os.getenv("ALPACA_SECRET")
+FRED_KEY =       os.getenv("FRED_KEY")
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
@@ -1311,9 +1311,9 @@ class BlackScholes:
         self.o = o
         self.call = call
         
-        self.d1 = (math.log(S/K) + (r + (o**2)/2) * self.T)/ (o * math.sqrt(self.T))
-        self.d2 = self.d1 - o * math.sqrt(self.T)
-        self.disc = math.exp(-r * self.T)
+        self.d1 = (math.log(self.S/self.K) + (self.r + (self.o**2)/2) * self.T)/ (self.o * math.sqrt(self.T))
+        self.d2 = self.d1 - self.o * math.sqrt(self.T)
+        self.disc = math.exp(-self.r * self.T)
         
     def delta(self):
         if self.call:
@@ -1342,6 +1342,11 @@ class BlackScholes:
             return self.S * norm.cdf(self.d1) - self.K * self.disc * norm.cdf(self.d2)
         return self.K * self.disc * norm.cdf(-self.d2) - self.S * norm.cdf(-self.d1)
     
+    def payoff_at_expiry(self, spot):
+        if self.call:
+            return max(spot - self.K, 0)
+        return max(self.K - spot, 0) 
+    
     def bid_ask(self, spread=0.05):
         mid = self.price()
         return {
@@ -1368,7 +1373,20 @@ class BlackScholes:
         "bid": self.bid_ask()["bid"],
         "ask": self.bid_ask()["ask"]
         }
-        
+    
+    def implied_volatility(self, market_price, tol=1e-6, max_iter=100):
+        o = 0.2  # initial guess
+        for _ in range(max_iter):
+            bs = BlackScholes(self.S, self.K, self.T * 365, self.r, o, self.call)
+            diff = bs.price() - market_price
+            if abs(diff) < tol:
+                return o
+            vega = bs.vega()
+            if vega == 0:
+                return None
+            o -= diff / vega
+        return o
+    
 def opcion_chain(S, K, T, r, o, spacing= 2.5):
     
     start = int(S * 0.5) - (int(S * 0.5) % spacing)
@@ -1449,7 +1467,10 @@ def parse_chain(data):
             "theta"   : o["theta"],
             "vega"    : o["vega"],
             "volume"  : o["volume"],
-            "oi"      : o["open_interest"]
+            "oi"      : o["open_interest"],
+            "bid"     : o["bid"],
+            "ask"     : o["ask"],
+            "last"    : o ["last_trade_price"]
         })
     return pd.DataFrame(rows)
 
@@ -1509,6 +1530,7 @@ def smile_vol(surface_df, S):
     ax.set_title(f"Vol Smile — {next_1[0]}")
     
     return fig
+
 def full_surface_pipeline(ticker, **kwargs):
     
     data       = get_all_chains(ticker)
@@ -1581,3 +1603,202 @@ def surface_plotly(surface_df):
     )
 
     return fig
+
+# ── P9 Volatility Surface ────────────────────────────────────────────────────────────────
+@st.cache_data
+def get_risk_free_rate():
+    url = "https://api.stlouisfed.org/fred/series/observations"
+    params = {
+        "series_id": "TB3MS",  # 3-month T-bill
+        "api_key"  : FRED_KEY,
+        "sort_order": "desc",
+        "limit"    : 1,
+        "file_type": "json"
+    }
+    r    = requests.get(url, params=params)
+    rate = float(r.json()["observations"][0]["value"]) / 100
+    return rate
+
+@st.cache_data
+def real_BS_data(ticker):
+    
+    S = get_prices_opcions(ticker)[-1]
+    df = parse_chain(get_all_chains(ticker))
+
+    expiries = sorted(df["expiry"].unique())
+    
+    today = pd.Timestamp.today().normalize()
+    expiries = [e for e in expiries if pd.to_datetime(e) > today]
+
+    days = [(pd.to_datetime(e) - today).days for e in expiries]
+
+    rate = get_risk_free_rate()
+
+    return {
+        "S": S,
+        "r": rate,
+        "days": days,
+        "expiries": expiries,
+        "df": df
+    }
+    
+class OptionPricing:
+    
+    def __init__(self, md,  orders):
+        self.md= md                         #class with inmportant values
+        self.orders = orders                #list with list of orders
+        
+    def net_premium(self):
+        return sum(order["premium"] * order["trade"] for order in self.orders)
+    
+    def exit_value(self,order,  spot):
+        if order["call"]:
+            return max(spot - order["strike"], 0)
+        return max(order["strike"] - spot, 0)
+    
+    def payoff(self, spot):
+        return sum([self.exit_value(order, spot) * order["trade"] for order in self.orders])
+    
+    def PnL(self, spot):
+        return self.payoff(spot) - self.net_premium()
+    
+    def get_spots(self):
+        df= self.md.df
+        spots= df["strike"].values
+        pnls= [self.PnL(spot) for spot in spots]
+        return spots, pnls
+    
+    def max_loss(self):
+        spots, pnls = self.get_spots()
+        max_loss= round(min(pnls),2)
+        return max_loss
+        
+    def max_profit(self):
+       spots, pnls = self.get_spots()
+       max_profit= round(max(pnls),2)
+       return max_profit
+    
+    def break_even(self):
+        spots, pnls = self.get_spots()
+        break_even_pos= np.where(np.diff(np.signbit(pnls)))[0]
+        return spots[break_even_pos]
+    
+    def resume(self):
+        print(f"max loss: {self.max_loss()}, max profit: {self.max_profit()}, break even: {self.break_even()}")
+        
+    def plotgraph(self):
+        
+        spots, pnls = self.get_spots()
+
+        x = np.linspace(min(spots), max(spots), 200)
+        y = [self.PnL(spot) for spot in x]
+
+        fig = plt.figure(figsize=(10,5))
+        plt.plot(x, y)
+        plt.axhline(0, color="black", linewidth=1)
+
+        plt.title("Strategy P&L")
+        plt.xlabel("Spot")
+        plt.ylabel("P&L")
+
+        return fig
+        
+    def plot_stremlit(self):
+        
+        spots, pnls = self.get_spots()
+        S= self.md.S
+        x = np.linspace(S * .5, S * 1.5, 500)
+        y = [self.PnL(spot) for spot in x]
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=x, y=y,
+            mode="lines",
+           line=dict(color="grey", width=2),
+            name="Option Price"
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=x,
+            y=[val if val < 0 else 0 for val in y],
+            fill='tozeroy',
+            mode='none',
+            fillcolor='rgba(255,0,0,0.3)',
+            name='Loss'
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=x,
+            y=[val if val > 0 else 0 for val in y],
+            fill='tozeroy',
+            mode='none',
+            fillcolor='rgba(0,255,0,0.3)',
+            name='Profit'
+        ))
+    
+        fig.update_layout(
+            title= "PnL of your order",
+            template="plotly_dark",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            xaxis_title="Stock Price",
+            yaxis_title="Option Value",
+            margin=dict(l=0, r=0, t=30, b=0))
+        
+        return fig
+    
+    def multiplotgraph(self):
+        
+        plt.figure(figsize=(10,5))
+        
+        for bs, trade in self.orders:
+            spots = np.linspace(0, bs.K*2, 300)
+            pnl = [trade * (bs.payoff_at_expiry(s) - bs.price()) for s in spots]
+            plt.plot(spots, pnl)
+            
+        plt.axhline(0, color="black", linewidth=1)
+
+        plt.title("Strategy P&L")
+        plt.xlabel("Spot")
+        plt.ylabel("P&L")
+
+        plt.show()
+        
+def chain_buy_sell(results, date):
+
+    df= results
+    df = df[df["expiry"]== date]
+    df= df[["strike", "type", "bid", "ask", "last"]]
+
+    calls_df   = df[df["type"]== "call"]
+    puts_df    = df[df["type"]== "put"]
+    strikes_df = calls_df[["strike"]].reset_index(drop=True)
+    
+    calls_df= calls_df[["bid", "ask", "last"]].reset_index(drop=True)
+    puts_df= puts_df  [["bid", "ask", "last"]].reset_index(drop=True)
+    
+    calls_df.columns = [c + " (c)" for c in calls_df.columns]
+    puts_df.columns  = [c + " (p)" for c in puts_df.columns]
+    
+    chain= pd.concat([calls_df,strikes_df, puts_df], axis= 1)
+    
+    return chain
+ 
+class MarketData:
+
+    st.cache_data
+    def __init__(self, ticker):
+        self.ticker = ticker
+        self.S = None
+        self.df = None
+        self.rate = None
+        self.expiries = None
+
+    st.cache_data
+    def load(self):
+        self.S = get_prices_opcions(self.ticker)[-1]
+        self.df = parse_chain(get_all_chains(self.ticker))
+        self.rate = get_risk_free_rate()
+        self.expiries = self.df["expiry"].unique()
+        return self   
