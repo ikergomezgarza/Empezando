@@ -112,13 +112,23 @@ if st.button("Reset options to buy"):
 
 #st.write(st.session_state.selections)
 st.write("")
-st.write("Current orders")
-st.write("")
+st.write(f"Current orders: {ticker}")
 
 for i in st.session_state.selections:
-    st.write(f"strike: {i["strike"]}, {i["trade"]} a {i["call"]}, and expiers in {i["day"]} days at {i["premium"]}$")
+    cont= "Call"
+    if i["call"]== False:
+        cont= "Put"
+        
+    trd= "Buy"
+    if i["trade"] == -1:
+        trd== "Sell"
+    
+    st.write(f"{trd} a  {i["strike"]} {cont} option at {i["premium"]} that expires in {i["day"]}")
 
 contracts= OptionPricing(md, st.session_state.selections)
 
 fig= contracts.plot_stremlit()
 st.plotly_chart(fig, use_container_width=True)
+
+
+st.page_link("main.py", label="Back to Home")
