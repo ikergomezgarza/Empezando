@@ -131,9 +131,9 @@ with col2:
 with col1:
     if len(st.session_state.selections) != 0:
         breaks_evens = ", ".join(map(str, contracts.break_even()))
-        st.error(f"Max loss: {contracts.max_loss()}")
-        st.success(f"Max porfit: {contracts.max_profit()}")
-        st.info(f" Break even: {breaks_evens}")
+        st.error(f"Max loss: {contracts.max_loss()}$")
+        st.success(f"Max porfit: {contracts.max_profit()}$")
+        st.info(f" Break even: {breaks_evens} stock price")
         
        #"st.info(f"Max loss: {contracts.max_loss()}, ax porfit: {contracts.max_profit()}, Break even: {breaks_evens}")
 
