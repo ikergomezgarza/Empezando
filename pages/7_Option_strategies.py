@@ -109,7 +109,7 @@ for key, i in user_input:
 
 col1, col2 = st.columns([4,1])
 with col2:
-    if st.button("Reset options to buy"):
+    if st.button("Reset orders"):
         st.session_state.selections = []
 
 #st.write(st.session_state.selections)
