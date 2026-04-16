@@ -1702,7 +1702,7 @@ class OptionPricing:
         
         spots, pnls = self.get_spots()
 
-        x = np.linspace(self.md.S * .5, self.md.S * 1.5, 500)
+        x = np.linspace(self.md.S * .75, self.md.S * 1.25, 500)
         y = [self.PnL(spot) for spot in x]
 
         fig = plt.figure(figsize=(10,5))

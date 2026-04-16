@@ -134,5 +134,5 @@ if len(st.session_state.selections) != 0:
     breaks_evens = ", ".join(map(str, contracts.break_even()))
     st.info(f"Max loss: {contracts.max_loss()}, Max porfit: {contracts.max_profit()}, Break even: {breaks_evens}")
 
-
+st.write("")
 st.page_link("main.py", label="Back to Home")
