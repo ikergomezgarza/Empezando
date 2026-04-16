@@ -107,12 +107,14 @@ for key, i in user_input:
         if item not in st.session_state.selections:
             st.session_state.selections.append(item)
 
-if st.button("Reset options to buy"):
-    st.session_state.selections = []
+col1, col2 = st.columns(2)
+with col2:
+    if st.button("Reset options to buy"):
+        st.session_state.selections = []
 
 #st.write(st.session_state.selections)
-st.write("")
-st.write(f"Current orders: {ticker}")
+with col1:
+    st.write(f"Current orders: {ticker}")
 
 for i in st.session_state.get("selections", []):
     cont = "Call" if i.get("call", True) else "Put"
