@@ -123,12 +123,12 @@ for i in st.session_state.selections:
     if i["trade"] == -1:
         trd== "Sell"
     
-    st.info(f"{trd} a  {i["strike"]} {cont} option at {i["premium"]}$ that expires in {i["day"]} day")
+    #st.info(f"{trd} a  {i["strike"]} {cont} option at {i["premium"]}$ that expires in {i["day"]} day")
 
 contracts= OptionPricing(md, st.session_state.selections)
 
+st.write("")
 col1, col2= st.columns([1,4])
-
 with col2:
     fig= contracts.plot_stremlit()
     st.plotly_chart(fig, use_container_width=True)
