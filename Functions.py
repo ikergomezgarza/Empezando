@@ -3,11 +3,16 @@ from finvizfinance.quote import finvizfinance
 from finvizfinance.screener.overview import Overview
 from finvizfinance.screener.valuation import Valuation
 from finvizfinance.screener.financial import Financial
+from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.requests import StockBarsRequest
+from alpaca.data.timeframe import TimeFrame
+
 import pandas as pd
 import numpy as np
 import yfinance as yf
 import requests
 import time
+import cvxpy as cp
 from datetime import datetime, timedelta
 import random
 from scipy.stats import norm
@@ -25,6 +30,7 @@ load_dotenv()
 ALPACA_KEY = os.getenv("ALPACA_KEY")
 ALPACA_SECRET = os.getenv("ALPACA_SECRET")
 FRED_KEY = os.getenv("FRED_KEY")
+client = StockHistoricalDataClient(ALPACA_KEY,  ALPACA_SECRET)
 
 # ── P2: Free Cash Flow ────────────────────────────────────────────────────────
 
@@ -1823,20 +1829,19 @@ def surface_plotly(surface_df):
     return fig
 
 
-# ── P9 Volatility Surface ────────────────────────────────────────────────────────────────
+# ── P10 Option strategy ────────────────────────────────────────────────────────────────
 @st.cache_data
 def get_risk_free_rate():
+    """Fetch 3-month T-bill rate from FRED. Falls back to 0.05 on error."""
     url = "https://api.stlouisfed.org/fred/series/observations"
-    params = {
-        "series_id": "TB3MS",  # 3-month T-bill
-        "api_key": FRED_KEY,
-        "sort_order": "desc",
-        "limit": 1,
-        "file_type": "json",
-    }
-    r = requests.get(url, params=params)
-    rate = float(r.json()["observations"][0]["value"]) / 100
-    return rate
+    params = {"series_id": "TB3MS", "api_key": FRED_KEY,
+              "sort_order": "desc", "limit": 1, "file_type": "json"}
+    try:
+        r = requests.get(url, params=params, timeout=5)
+        r.raise_for_status()
+        return float(r.json()["observations"][0]["value"]) / 100
+    except (requests.RequestException, KeyError, ValueError):
+        return 0.05  # fallback razonable
 
 
 @st.cache_data
@@ -1861,6 +1866,8 @@ class OptionPricing:
     def __init__(self, md, orders):
         self.md = md  # class with inmportant values
         self.orders = orders  # list with list of orders
+        self._spots: np.ndarray | None = None  # cache
+        self._pnls: np.ndarray | None = None
 
     def net_premium(self):
         return sum(order["premium"] * order["trade"] for order in self.orders)
@@ -1879,10 +1886,11 @@ class OptionPricing:
         return self.payoff(spot) - self.net_premium()
 
     def get_spots(self):
-        S = self.md.S
-        spots = np.linspace(S * 0.5, S * 1.5, 500)
-        pnls = [self.PnL(spot) for spot in spots]
-        return spots, pnls
+        if self._spots is None:
+            S = self.md.S
+            self._spots = np.linspace(S * 0.5, S * 1.5, 500)
+            self._pnls = np.vectorize(self.PnL)(self._spots)
+        return self._spots, self._pnls
 
     def max_loss(self):
         spots, pnls = self.get_spots()
@@ -1912,9 +1920,11 @@ class OptionPricing:
         return bes
 
     def resume(self):
-        print(
-            f"max loss: {self.max_loss()}, max profit: {self.max_profit()}, break even: {self.break_even()}"
-        )
+        
+            return {"max_loss": self.max_loss(),
+                    "max_profit": self.max_profit(), 
+                    "break_even": self.break_even()}
+        
 
     def plotgraph(self):
 
@@ -1986,23 +1996,6 @@ class OptionPricing:
 
         return fig
 
-    def multiplotgraph(self):
-
-        plt.figure(figsize=(10, 5))
-
-        for bs, trade in self.orders:
-            spots = np.linspace(0, bs.K * 2, 300)
-            pnl = [trade * (bs.payoff_at_expiry(s) - bs.price()) for s in spots]
-            plt.plot(spots, pnl)
-
-        plt.axhline(0, color="black", linewidth=1)
-
-        plt.title("Strategy P&L")
-        plt.xlabel("Spot")
-        plt.ylabel("P&L")
-
-        plt.show()
-
 
 def chain_buy_sell(results, date):
 
@@ -2039,3 +2032,120 @@ class MarketData:
         self.rate = get_risk_free_rate()
         self.expiries = self.df["expiry"].unique()
         return self
+
+# ── P11 Cvar ────────────────────────────────────────────────────────────────
+
+client = StockHistoricalDataClient(ALPACA_KEY,  ALPACA_SECRET)
+
+def get_returns_cvar(symbol : str, START_DATE : str = "2016-01-01" ) -> pd.Series:
+    "Download the rickers data"
+    
+    try:
+        END_DATE= datetime.now()
+        
+        params = StockBarsRequest(
+            symbol_or_symbols= symbol,
+            timeframe=TimeFrame.Day,
+            start=START_DATE,
+            end=END_DATE,
+            feed="iex"
+        )
+
+        bars = client.get_stock_bars(params)
+        df = bars.df.reset_index()
+        
+        if "symbol" in df.columns:
+            df = df[df["symbol"]== symbol]
+            
+        df["returns"] = (df["close"] / df["close"].shift(-1)).apply(lambda x: np.log(x))
+        
+        return df["returns"].dropna()
+
+    except:
+        return
+    
+def cvar_stats(df : pd.DataFrame) -> tuple:
+    "returns the inicial stats"
+    
+    R = df.dropna().values
+    T, N = R.shape
+    alpha = 0.05  # worst 5%
+
+    w = cp.Variable(N)
+    zeta = cp.Variable()
+    u = cp.Variable(T)
+
+    portfolio_losses = -R @ w
+
+    cvar = zeta + (1 / (alpha * T)) * cp.sum(u)
+
+    constraints = [
+        u >= portfolio_losses - zeta,
+        u >= 0,
+        cp.sum(w) == 1,
+        w >= 0,
+    ]
+
+    prob = cp.Problem(cp.Minimize(cvar), constraints)
+    prob.solve()
+
+    print(f"CVaR: {cvar.value:.4f}")
+    print(f"VaR:  {zeta.value:.4f}")
+    print(pd.Series(w.value, index=df.columns).round(4))
+    
+    return cvar, zeta, w
+    
+def cvar_efficient_frontier(df : pd.DataFrame, alpha : float = 0.05, n_points : int = 50 ) -> pd.DataFrame:
+    "loop through min to max posible points to get the frontier"
+    
+    R = df.dropna().values
+    T, N = R.shape
+
+    mean_return = R.mean(axis = 0)
+    min_return = mean_return.min()
+    max_return = mean_return.max()
+    targets = np.linspace(min_return, max_return, n_points)
+    
+    frontier = []
+    
+    for target in targets:
+        
+        w = cp.Variable(N)
+        zeta = cp.Variable()
+        u = cp.Variable(T)
+
+        portfolio_losses = -R @ w
+        cvar = zeta + (1 / (alpha * T)) * cp.sum(u)
+
+        constraints = [
+            u >= portfolio_losses - zeta,
+            u >= 0,
+            cp.sum(w) == 1,
+            w >= 0,
+            (R @ w) @ np.ones(T) / T >= target,
+        ]
+        
+        prob = cp.Problem(cp.Minimize(cvar), constraints)
+        prob.solve()
+        
+        if prob.status in ["optimal", "optimal_inaccurate"]:
+            frontier.append({
+                "target_return": target,
+                "cvar": cvar.value,
+                "weights": pd.Series(w.value, index=df.columns),
+            })
+        
+    return pd.DataFrame([{"target_return": f["target_return"], "cvar": f["cvar"]} for f in frontier]), frontier
+
+def cvar_weights(frontier_df: pd.DataFrame, frontier_full : pd.DataFrame) -> pd.DataFrame:
+    "gets all the weights at each return "
+    
+    weights_df = pd.DataFrame(
+        [f["weights"] for f in frontier_full],
+        index=frontier_df["target_return"]
+    )
+
+    weights_df = weights_df.clip(lower=0)
+    weights_df = weights_df.div(weights_df.sum(axis=1), axis=0)
+    
+    return weights_df
