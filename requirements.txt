@@ -10,3 +10,6 @@ requests
 matplotlib
 plotly
 cvxpy==1.5.3 
+clarabel
+scs
+ecos
