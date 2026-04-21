@@ -131,4 +131,6 @@ if st.button("Start the CVaR"):
 
     st.plotly_chart(fig2)
     
+st.write("")
+st.page_link("main.py", label="Back to Home")
     
