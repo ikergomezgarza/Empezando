@@ -9,4 +9,4 @@ python-dotenv
 requests
 matplotlib
 plotly
-cvxpy==1.5.3
+cvxpy==1.5.3 
