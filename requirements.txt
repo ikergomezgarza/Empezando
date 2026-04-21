@@ -4,12 +4,11 @@ numpy
 yfinance==0.2.43
 finvizfinance
 edgar==5.1.16
-scipy==1.13.1
+scipy
 python-dotenv
 requests
 matplotlib
 plotly
-cvxpy==1.5.3 
+cvxpy
 clarabel
 scs
-ecos
