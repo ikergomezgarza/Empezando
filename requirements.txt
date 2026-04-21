@@ -12,3 +12,4 @@ plotly
 cvxpy
 clarabel
 scs
+alpaca-py
