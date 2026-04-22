@@ -109,7 +109,7 @@ if st.button("Start the CVaR"):
         y=[max_sharpe["target_return"]],
         mode="markers+text",
         marker=dict(size=10, color="yellow"),
-        text=["Max Sharpe"],
+        text=[f"Max Sharpe {max_sharpe}"],
         textposition="top right",
         name="Max Sharpe",
     ))
@@ -130,6 +130,7 @@ if st.button("Start the CVaR"):
     weights_df = cvar_weights(frontier_df, frontier_full)
 
     fig2 = go.Figure()
+    
 
     for ticker in weights_df.columns:
         fig2.add_trace(go.Scatter(
