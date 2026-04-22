@@ -103,7 +103,6 @@ if st.button("Start the CVaR"):
     )
     
     max_sharpe = frontier_df.loc[frontier_df["sharpe"].idxmax()]
-
     fig.add_trace(go.Scatter(
         x=[max_sharpe["cvar"]],
         y=[max_sharpe["target_return"]],
@@ -111,8 +110,19 @@ if st.button("Start the CVaR"):
         marker=dict(size=10, color="yellow"),
         text=["Max Sharpe"],
         textposition="top right",
-        name=f"Max Sharpe {max_sharpe["sharpe"]}",
+        name=f"Max Sharpe {round(max_sharpe["sharpe"],2)}",
     ))
+    
+    min_cvar = frontier_df.loc[frontier_df["cvar"].idxmin()]
+    fig.add_trace(go.Scatter(
+        x=[min_cvar["cvar"]],
+        y=[min_cvar["target_return"]],
+        mode="markers+text",
+        marker=dict(size=10, color="cyan"),
+        text=["Min CVaR"],
+        textposition="top right",
+        name=f"Min CVaR {round(max_sharpe["cvar"],4)}",
+))
         
     fig.update_layout(
     xaxis_title="CVaR (Tail Risk)",
