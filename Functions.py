@@ -2057,43 +2057,12 @@ def get_returns_cvar(symbol : str, START_DATE : str = "2016-01-01" ) -> pd.Serie
         if "symbol" in df.columns:
             df = df[df["symbol"]== symbol]
             
-        df["returns"] = (df["close"] / df["close"].shift(-1)).apply(lambda x: np.log(x))
+        df["returns"] = np.log(df["close"] / df["close"].shift(1))
         
         return df["returns"].dropna()
 
     except:
         return
-    
-def cvar_stats(df : pd.DataFrame) -> tuple:
-    "returns the inicial stats"
-    
-    R = df.dropna().values
-    T, N = R.shape
-    alpha = 0.05  # worst 5%
-
-    w = cp.Variable(N)
-    zeta = cp.Variable()
-    u = cp.Variable(T)
-
-    portfolio_losses = -R @ w
-
-    cvar = zeta + (1 / (alpha * T)) * cp.sum(u)
-
-    constraints = [
-        u >= portfolio_losses - zeta,
-        u >= 0,
-        cp.sum(w) == 1,
-        w >= 0,
-    ]
-
-    prob = cp.Problem(cp.Minimize(cvar), constraints)
-    prob.solve()
-
-    print(f"CVaR: {cvar.value:.4f}")
-    print(f"VaR:  {zeta.value:.4f}")
-    print(pd.Series(w.value, index=df.columns).round(4))
-    
-    return cvar, zeta, w
     
 def cvar_efficient_frontier(df : pd.DataFrame, alpha : float = 0.05, n_points : int = 50 ) -> pd.DataFrame:
     "loop through min to max posible points to get the frontier"
