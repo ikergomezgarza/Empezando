@@ -2094,11 +2094,11 @@ def cvar_efficient_frontier(df : pd.DataFrame, alpha : float = 0.05, n_points : 
             (R @ w) @ np.ones(T) / T >= target,
         ]
         
-        portfolio_returns = R @ w.value
-        sharpe = (portfolio_returns.mean() * 252 - 0.035) / (portfolio_returns.std() * np.sqrt(252))
-        
         prob = cp.Problem(cp.Minimize(cvar), constraints)
         prob.solve()
+        
+        portfolio_returns = R @ w.value
+        sharpe = (portfolio_returns.mean() * 252 - 0.035) / (portfolio_returns.std() * np.sqrt(252))
         
         if prob.status in ["optimal", "optimal_inaccurate"]:
             frontier.append({
