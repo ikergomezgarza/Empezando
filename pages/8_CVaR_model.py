@@ -79,6 +79,8 @@ if st.button("Start the CVaR"):
     data = {s: get_returns_cvar(s) for s in st.session_state.selections}
     df = pd.DataFrame(data)
     
+    st.write(df)
+    
     frontier_df, frontier_full = cvar_efficient_frontier(df)
     
     fig = go.Figure()
