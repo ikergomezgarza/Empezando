@@ -2094,6 +2094,9 @@ def cvar_efficient_frontier(df : pd.DataFrame, alpha : float = 0.05, n_points : 
             (R @ w) @ np.ones(T) / T >= target,
         ]
         
+        portfolio_returns = R @ w.value
+        sharpe = (portfolio_returns.mean() * 252 - 0.035) / (portfolio_returns.std() * np.sqrt(252))
+        
         prob = cp.Problem(cp.Minimize(cvar), constraints)
         prob.solve()
         
@@ -2102,9 +2105,18 @@ def cvar_efficient_frontier(df : pd.DataFrame, alpha : float = 0.05, n_points : 
                 "target_return": target,
                 "cvar": cvar.value,
                 "weights": pd.Series(w.value, index=df.columns),
+                "annual_return": portfolio_returns.mean() * 252,
+                "annual_std": portfolio_returns.std() * np.sqrt(252),
+                "sharpe": sharpe,
             })
-        
-    return pd.DataFrame([{"target_return": f["target_return"], "cvar": f["cvar"]} for f in frontier]), frontier
+            
+        return pd.DataFrame([{
+            "target_return": f["target_return"],
+            "cvar": f["cvar"],
+            "annual_return": f["annual_return"],
+            "annual_std": f["annual_std"],
+            "sharpe": f["sharpe"],
+        } for f in frontier]), frontier
 
 def cvar_weights(frontier_df: pd.DataFrame, frontier_full : pd.DataFrame) -> pd.DataFrame:
     "gets all the weights at each return "

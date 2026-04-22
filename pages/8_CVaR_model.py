@@ -102,6 +102,18 @@ if st.button("Start the CVaR"):
         )
     )
     
+    max_sharpe = frontier_df.loc[frontier_df["sharpe"].idxmax()]
+
+    fig.add_trace(go.Scatter(
+        x=[max_sharpe["cvar"]],
+        y=[max_sharpe["target_return"]],
+        mode="markers+text",
+        marker=dict(size=10, color="yellow"),
+        text=["Max Sharpe"],
+        textposition="top right",
+        name="Max Sharpe",
+    ))
+        
     fig.update_layout(
     xaxis_title="CVaR (Tail Risk)",
     yaxis_title="Expected Daily Return",
