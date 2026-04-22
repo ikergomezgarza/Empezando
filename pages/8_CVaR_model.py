@@ -84,6 +84,9 @@ with col2: alpha = st.number_input("Alpha:", 0.0, 1.0, 0.05)
 st.write("")
 if st.button("Start the CVaR"):
     
+    if st.session_state.selections.empty:
+        raise "You have to add tickers to the portfolio"
+    
     data = {s: get_returns_cvar(s, START_DATE= START_DATE) for s in st.session_state.selections}
     df = pd.DataFrame(data)
     
