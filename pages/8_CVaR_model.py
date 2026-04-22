@@ -86,7 +86,7 @@ if st.button("Start the CVaR"):
     data = {s: get_returns_cvar(s, START_DATE= START_DATE) for s in st.session_state.selections}
     df = pd.DataFrame(data)
     
-    frontier_df, frontier_full = cvar_efficient_frontier(df)
+    frontier_df, frontier_full = cvar_efficient_frontier(df, alpha = alpha)
     
     fig = go.Figure()
 
