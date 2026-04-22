@@ -72,7 +72,7 @@ with col3:
         st.session_state.selections = ["AAPL", "MSFT", "NVDA", "AMZN", "TSLA", "GOOGL", "META", "JPM", "XOM", "NFLX"]
 
 st.write("")
-START_DATE = st.date_input("Start from:")
+START_DATE = st.date_input("Start from:", "2024-01-01")
 
 st.write("")
 st.info(f"Current tickers:  {', '.join(st.session_state.selections)}")
@@ -80,7 +80,7 @@ st.info(f"Current tickers:  {', '.join(st.session_state.selections)}")
 st.write("")
 if st.write("Start the CVaR"):
     
-    data = {s: get_returns_cvar(s, START_DATE= "2024-01-01") for s in st.session_state.selections}
+    data = {s: get_returns_cvar(s, START_DATE= START_DATE) for s in st.session_state.selections}
     df = pd.DataFrame(data)
     
     frontier_df, frontier_full = cvar_efficient_frontier(df)
