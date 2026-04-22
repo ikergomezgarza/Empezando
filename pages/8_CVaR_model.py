@@ -70,11 +70,15 @@ with col2:
 with col3:
     if st.button("Use example"):
         st.session_state.selections = ["AAPL", "MSFT", "NVDA", "AMZN", "TSLA", "GOOGL", "META", "JPM", "XOM", "NFLX"]
-    
-st.write(f"Current tickers:  {', '.join(st.session_state.selections)}")
 
 st.write("")
-if st.button("Start the CVaR"):
+START_DATE = st.date_input("Start from:")
+
+st.write("")
+st.info(f"Current tickers:  {', '.join(st.session_state.selections)}")
+
+st.write("")
+if st.write("Start the CVaR"):
     
     data = {s: get_returns_cvar(s, START_DATE= "2024-01-01") for s in st.session_state.selections}
     df = pd.DataFrame(data)
