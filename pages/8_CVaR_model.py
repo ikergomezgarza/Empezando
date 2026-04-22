@@ -111,7 +111,7 @@ if st.button("Start the CVaR"):
         marker=dict(size=10, color="yellow"),
         text=["Max Sharpe"],
         textposition="top right",
-        name=f"Max Sharpe {max_sharpe}",
+        name=f"Max Sharpe {max_sharpe["sharpe"]}",
     ))
         
     fig.update_layout(
