@@ -186,6 +186,9 @@ if st.button("Start the CVaR"):
     min_cvar_weights = min_cvar_weights.clip(lower=0)
     min_cvar_weights = (min_cvar_weights / min_cvar_weights.sum()).round(4)
     
+    max_sharpe_weights.name = None
+    min_cvar_weights.name = None
+    
     col1, col2 = st.columns(2)
 
     with col1:
