@@ -1,6 +1,5 @@
 from Functions import (
     get_returns_cvar,
-    cvar_stats,
     cvar_efficient_frontier,
     cvar_weights
 )
