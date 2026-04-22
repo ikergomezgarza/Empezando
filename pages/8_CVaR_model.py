@@ -72,10 +72,10 @@ with col3:
         st.session_state.selections = ["AAPL", "MSFT", "NVDA", "AMZN", "TSLA", "GOOGL", "META", "JPM", "XOM", "NFLX"]
 
 st.write("")
-START_DATE = st.date_input("Start from:", "2024-01-01")
+st.info(f"Current tickers:  {', '.join(st.session_state.selections)}")
 
 st.write("")
-st.info(f"Current tickers:  {', '.join(st.session_state.selections)}")
+START_DATE = st.date_input("Start from:", "2024-01-01")
 
 st.write("")
 if st.write("Start the CVaR"):
