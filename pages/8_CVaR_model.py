@@ -176,6 +176,26 @@ if st.button("Start the CVaR"):
     col3.metric("Sharpe Ratio", f"{min_cvar['sharpe']:.2f}")
     col4.metric("CVaR", f"{min_cvar['cvar']:.2%}")
     
+    max_sharpe_weights = frontier_full[frontier_df["sharpe"].idxmax()]["weights"]
+    min_cvar_weights = frontier_full[frontier_df["cvar"].idxmin()]["weights"]
+
+    # clean up numerical noise
+    max_sharpe_weights = max_sharpe_weights.clip(lower=0)
+    max_sharpe_weights = (max_sharpe_weights / max_sharpe_weights.sum()).round(4)
+
+    min_cvar_weights = min_cvar_weights.clip(lower=0)
+    min_cvar_weights = (min_cvar_weights / min_cvar_weights.sum()).round(4)
+    
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("**Max Sharpe Weights**")
+        st.dataframe(max_sharpe_weights[max_sharpe_weights > 0.001].sort_values(ascending=False).map("{:.1%}".format))
+
+    with col2:
+        st.markdown("**Min CVaR Weights**")
+        st.dataframe(min_cvar_weights[min_cvar_weights > 0.001].sort_values(ascending=False).map("{:.1%}".format))
+        
 st.write("")
 st.page_link("main.py", label="Back to Home")
     
