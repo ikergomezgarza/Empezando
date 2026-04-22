@@ -190,11 +190,11 @@ if st.button("Start the CVaR"):
 
     with col1:
         st.markdown("**Max Sharpe Weights**")
-        st.dataframe(max_sharpe_weights[max_sharpe_weights > 0.001].sort_values(ascending=False).map("{:.1%}".format))
+        st.dataframe(max_sharpe_weights[max_sharpe_weights > 0.001].sort_values(ascending=False).map("{:.1%}".format),hide_index= True)
 
     with col2:
         st.markdown("**Min CVaR Weights**")
-        st.dataframe(min_cvar_weights[min_cvar_weights > 0.001].sort_values(ascending=False).map("{:.1%}".format))
+        st.dataframe(min_cvar_weights[min_cvar_weights > 0.001].sort_values(ascending=False).map("{:.1%}".format),hide_index= True)
         
 st.write("")
 st.page_link("main.py", label="Back to Home")
