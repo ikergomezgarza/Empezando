@@ -78,7 +78,7 @@ col1, col2 = st.columns(2)
 st.write("")
 
 with col1: START_DATE = st.date_input("Start from:", "2024-01-01")
-with col2: alpha = st. selectbox("Alpha:")
+with col2: alpha = st.number_input("Alpha:", 0.0, 1.0, 0.05)
 
 st.write("")
 if st.write("Start the CVaR"):
