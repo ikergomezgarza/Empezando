@@ -76,10 +76,8 @@ st.write(f"Current tickers:  {', '.join(st.session_state.selections)}")
 st.write("")
 if st.button("Start the CVaR"):
     
-    data = {s: get_returns_cvar(s) for s in st.session_state.selections}
+    data = {s: get_returns_cvar(s, START_DATE= "2022-01-01") for s in st.session_state.selections}
     df = pd.DataFrame(data)
-    
-    st.write(df)
     
     frontier_df, frontier_full = cvar_efficient_frontier(df)
     
