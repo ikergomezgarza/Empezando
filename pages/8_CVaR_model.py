@@ -73,6 +73,7 @@ with col3:
 
 st.write("")
 st.info(f"Current tickers:  {', '.join(st.session_state.selections)}")
+st.wite("")
 
 col1, col2 = st.columns(2)
 st.write("")
