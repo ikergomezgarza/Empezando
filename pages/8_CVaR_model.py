@@ -161,22 +161,21 @@ if st.button("Start the CVaR"):
 
     st.plotly_chart(fig2)
     
+    st.subheader("Max Sharpe Portfolio")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Annual Return", f"{max_sharpe['annual_return']:.1%}")
+    col2.metric("Annual Volatility", f"{max_sharpe['annual_std']:.1%}")
+    col3.metric("Sharpe Ratio", f"{max_sharpe['sharpe']:.2f}")
+    col4.metric("CVaR", f"{max_sharpe['cvar']:.2%}")
+
+    st.write("")
+    st.subheader("Min CVaR Portfolio")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Annual Return", f"{min_cvar['annual_return']:.1%}")
+    col2.metric("Annual Volatility", f"{min_cvar['annual_std']:.1%}")
+    col3.metric("Sharpe Ratio", f"{min_cvar['sharpe']:.2f}")
+    col4.metric("CVaR", f"{min_cvar['cvar']:.2%}")
+    
 st.write("")
-
-st.subheader("Max Sharpe Portfolio")
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Annual Return", f"{max_sharpe['annual_return']:.1%}")
-col2.metric("Annual Volatility", f"{max_sharpe['annual_std']:.1%}")
-col3.metric("Sharpe Ratio", f"{max_sharpe['sharpe']:.2f}")
-col4.metric("CVaR", f"{max_sharpe['cvar']:.2%}")
-
-st.write("")
-st.subheader("Min CVaR Portfolio")
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Annual Return", f"{min_cvar['annual_return']:.1%}")
-col2.metric("Annual Volatility", f"{min_cvar['annual_std']:.1%}")
-col3.metric("Sharpe Ratio", f"{min_cvar['sharpe']:.2f}")
-col4.metric("CVaR", f"{min_cvar['cvar']:.2%}")
-
 st.page_link("main.py", label="Back to Home")
     
