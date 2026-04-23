@@ -2048,7 +2048,8 @@ def get_returns_cvar(symbol : str, START_DATE : str = "2016-01-01" ) -> pd.Serie
             timeframe=TimeFrame.Day,
             start=START_DATE,
             end=END_DATE,
-            feed="iex"
+            feed="iex",
+            adjustment='all'
         )
 
         bars = client.get_stock_bars(params)
