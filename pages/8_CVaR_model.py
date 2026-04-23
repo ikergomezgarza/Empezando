@@ -1,7 +1,9 @@
 from Functions import (
     get_returns_cvar,
     cvar_efficient_frontier,
-    cvar_weights
+    cvar_weights, 
+    adjusting_cvar_backtest, 
+    static_cvar_backtest
 )
 
 import pandas as pd
@@ -204,6 +206,27 @@ if st.button("Start the CVaR"):
         st.markdown("**Min CVaR Weights**")
         st.dataframe(min_cvar_weights[min_cvar_weights > 0.001].sort_values(ascending=False).map("{:.1%}".format).to_frame("Weight"))
         
+    st.write("")
+    st.title("Results of the model:")
+    
+    with st.spinner("Backtesting the portfolio against S&P 500"):
+    
+        spy_returns= get_returns_cvar("SPY") # Get S&P 500 for back testing
+        spy_df = pd.DataFrame(data)
+        
+        cvar_series = adjusting_cvar_backtest(df)
+        eq_series = static_cvar_backtest(df)
+        eq_series_spy = static_cvar_backtest(spy_df)
+
+        cvar_cumulative = (1 + cvar_series).cumprod()
+        eq_cumulative = (1 + eq_series).cumprod()
+        eq_cumulative_spy = (1 + eq_series_spy).cumprod()
+
+        backtesting_df = pd.concat([cvar_cumulative, eq_cumulative, eq_cumulative_spy], axis = 1)
+        backtesting_df.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
+        
+        st.line_chart(df)
+    
 st.write("")
 st.page_link("main.py", label="Back to Home")
     

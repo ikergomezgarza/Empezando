@@ -2130,3 +2130,46 @@ def cvar_weights(frontier_df: pd.DataFrame, frontier_full : pd.DataFrame) -> pd.
     weights_df = weights_df.div(weights_df.sum(axis=1), axis=0)
     
     return weights_df
+
+def adjusting_cvar_backtest(returns: pd.DataFrame, lookback: int = 252, steps: int = 5) -> pd.Series:
+    "Get returns of a portfolio that adjusts to the highest sharpe ratio portfolio based on a CVaR analysis"
+    
+    dates = []
+    daily_returns = []
+
+    for i in range(lookback, len(returns) - steps, steps):
+        
+        window_data = returns.iloc[i - lookback:i]
+        next_period = returns.iloc[i:i + steps]
+
+        df_frontier, frontier_details = cvar_efficient_frontier(window_data)
+        
+        best_idx = df_frontier['sharpe'].idxmax()
+        optimal_weights = frontier_details[best_idx]['weights'].values
+
+        period_returns = (next_period @ optimal_weights).tolist()
+        
+        dates.extend(next_period.index.tolist())
+        daily_returns.extend(period_returns)
+
+    return pd.Series(daily_returns, index=dates)
+
+
+def static_cvar_backtest(returns: pd.DataFrame, lookback: int = 252, steps: int = 5) -> pd.Series:
+    "Get the returns of a portfolio investing equal weights and not adjusting"
+    
+    num_assets = returns.shape[1]
+    equal_weights = np.ones(num_assets) / num_assets
+    
+    dates = []
+    daily_returns = []
+
+    for i in range(lookback, len(returns) - steps, steps):
+        
+        next_period = returns.iloc[i:i + steps]
+        period_returns = (next_period @ equal_weights).tolist()
+        
+        dates.extend(next_period.index.tolist())
+        daily_returns.extend(period_returns)
+
+    return pd.Series(daily_returns, index=dates)
