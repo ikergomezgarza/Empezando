@@ -211,21 +211,21 @@ if st.button("Start the CVaR"):
     
     with st.spinner("Backtesting the portfolio against S&P 500"):
     
-        spy_returns= get_returns_cvar("SPY") # Get S&P 500 for back testing
-        spy_df = pd.DataFrame(data)
-        
+        spy_returns = get_returns_cvar("SPY")
+        spy_df = pd.DataFrame(spy_returns)
+
         cvar_series = adjusting_cvar_backtest(df)
         eq_series = static_cvar_backtest(df)
         eq_series_spy = static_cvar_backtest(spy_df)
 
-        cvar_cumulative = (1 + cvar_series).cumprod()
-        eq_cumulative = (1 + eq_series).cumprod()
-        eq_cumulative_spy = (1 + eq_series_spy).cumprod()
+        # align indices
+        combined = pd.concat([cvar_series, eq_series, eq_series_spy], axis=1, join="inner").dropna()
 
-        backtesting_df = pd.concat([cvar_cumulative, eq_cumulative, eq_cumulative_spy], axis = 1)
-        backtesting_df.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
-        
-        st.line_chart(backtesting_df) 
+        combined.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
+
+        cumulative = (1 + combined).cumprod()
+
+        st.line_chart(cumulative)
     
 st.write("")
 st.page_link("main.py", label="Back to Home")
