@@ -216,16 +216,18 @@ if st.button("Start the CVaR"):
 
         cvar_series = adjusting_cvar_backtest(df)
         eq_series = static_cvar_backtest(df)
-        eq_series_spy = static_cvar_backtest(spy_df)
+        series_spy = static_cvar_backtest(spy_df)
+        
+        cvar_cumulative = (1 + cvar_series).cumprod()
+        eq_cumulative = (1 + eq_series).cumprod()
+        cumulative_spy = (1 + series_spy).cumprod()
 
         # align indices
-        combined = pd.concat([cvar_series, eq_series, eq_series_spy], axis=1, join="inner").dropna()
+        combined = pd.concat([cvar_series, eq_series, series_spy], axis=1, join="inner").dropna()
 
         combined.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
 
-        cumulative = (1 + combined).cumprod()
-
-        st.line_chart(cumulative)
+        st.line_chart(combined)
     
 st.write("")
 st.page_link("main.py", label="Back to Home")
