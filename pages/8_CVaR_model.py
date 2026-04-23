@@ -214,21 +214,21 @@ if st.button("Start the CVaR"):
         spy_returns = get_returns_cvar("SPY")
         spy_df = pd.DataFrame(spy_returns)
 
-        cvar_series = adjusting_cvar_backtest(df)
-        eq_series = static_cvar_backtest(df)
-        series_spy = static_cvar_backtest(spy_df)
-        
-        cvar_cumulative = (1 + cvar_series).cumprod()
-        eq_cumulative = (1 + eq_series).cumprod()
-        cumulative_spy = (1 + series_spy).cumprod()
+        # 1. Get the raw returns (NOT cumulative yet)
+        cvar_returns = adjusting_cvar_backtest(df)
+        eq_returns = static_cvar_backtest(df)
+        spy_returns = static_cvar_backtest(spy_df)
 
-        # align indices
-        combined = pd.concat([cvar_cumulative, eq_cumulative, cumulative_spy], axis=1, join="inner").dropna()
+        # 2. Align them into one dataframe using returns
+        combined_returns = pd.concat([cvar_returns, eq_returns, spy_returns], axis=1, join="inner").dropna()
 
-        combined.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
+        # 3. Calculate cumulative growth FROM the point where they all align
+        combined_cumulative = (1 + combined_returns).cumprod()
 
-        st.line_chart(combined)
-    
+        # 4. Plot
+        combined_cumulative.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
+        st.line_chart(combined_cumulative)
+            
 st.write("")
 st.page_link("main.py", label="Back to Home")
     
