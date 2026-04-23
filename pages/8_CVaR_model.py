@@ -223,7 +223,7 @@ if st.button("Start the CVaR"):
         cumulative_spy = (1 + series_spy).cumprod()
 
         # align indices
-        combined = pd.concat([cvar_series, eq_series, series_spy], axis=1, join="inner").dropna()
+        combined = pd.concat([cvar_cumulative, eq_cumulative, cumulative_spy], axis=1, join="inner").dropna()
 
         combined.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
 
