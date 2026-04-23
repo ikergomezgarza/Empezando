@@ -225,8 +225,9 @@ if st.button("Start the CVaR"):
         backtesting_df = pd.concat([cvar_cumulative, eq_cumulative, eq_cumulative_spy], axis = 1)
         backtesting_df.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
         
-        st.line_chart(df)
+        st.line_chart(df) 
     
 st.write("")
 st.page_link("main.py", label="Back to Home")
     
+  
