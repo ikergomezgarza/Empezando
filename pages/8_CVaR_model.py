@@ -229,7 +229,9 @@ if st.button("Start the CVaR"):
         combined_cumulative.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
         st.line_chart(combined_cumulative)
         
+        st.write(len(cvar_returns), len(eq_returns), len(spy_returns))
         st.write(combined_cumulative)
+        
             
 st.write("")
 st.page_link("main.py", label="Back to Home")
