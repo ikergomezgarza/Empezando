@@ -51,6 +51,7 @@ def add_ticker():
     st.session_state.ticker_input = ""
     
 ticker= st.text_input("Ticker to add:", key="ticker_input", on_change=add_ticker)
+ticker= ticker.split(",")
 
 if st.session_state.get("ticker_error"):
     st.error(st.session_state.ticker_error)
@@ -214,23 +215,16 @@ if st.button("Start the CVaR"):
         spy_returns = get_returns_cvar("SPY", START_DATE= START_DATE)
         spy_df = pd.DataFrame(spy_returns)
 
-        # 1. Get the raw returns (NOT cumulative yet)
         cvar_returns = adjusting_cvar_backtest(df)
         eq_returns = static_cvar_backtest(df)
         spy_returns = static_cvar_backtest(spy_df)
 
-        # 2. Align them into one dataframe using returns
         combined_returns = pd.concat([cvar_returns, eq_returns, spy_returns], axis=1, join="inner").dropna()
 
-        # 3. Calculate cumulative growth FROM the point where they all align
         combined_cumulative = (1 + combined_returns).cumprod()
 
-        # 4. Plot
         combined_cumulative.columns = ["CVaR adjusted", "CVaR", "S&P 500"]
         st.line_chart(combined_cumulative)
-        
-        st.write(len(cvar_returns), len(eq_returns), len(spy_returns))
-        st.write(combined_cumulative)
         
             
 st.write("")
