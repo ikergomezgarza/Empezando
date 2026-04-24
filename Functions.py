@@ -2057,7 +2057,9 @@ def get_returns_cvar(symbol : str, START_DATE : str = "2016-01-01" ) -> pd.Serie
         
         if "symbol" in df.columns:
             df = df[df["symbol"]== symbol]
-            
+        
+        df = bars.df.reset_index()
+        df = df.set_index("timestamp")
         df["returns"] = np.log(df["close"] / df["close"].shift(1))
         
         return df["returns"].dropna()
