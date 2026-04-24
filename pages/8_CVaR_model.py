@@ -211,7 +211,7 @@ if st.button("Start the CVaR"):
     
     with st.spinner("Backtesting the portfolio against S&P 500"):
     
-        spy_returns = get_returns_cvar("SPY")
+        spy_returns = get_returns_cvar("SPY", START_DATE= START_DATE)
         spy_df = pd.DataFrame(spy_returns)
 
         # 1. Get the raw returns (NOT cumulative yet)
