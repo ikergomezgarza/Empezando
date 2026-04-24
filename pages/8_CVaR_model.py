@@ -51,7 +51,6 @@ def add_ticker():
     st.session_state.ticker_input = ""
     
 ticker= st.text_input("Ticker to add:", key="ticker_input", on_change=add_ticker)
-ticker= ticker.split(",")
 
 if st.session_state.get("ticker_error"):
     st.error(st.session_state.ticker_error)
