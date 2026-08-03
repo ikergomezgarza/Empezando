@@ -2053,7 +2053,7 @@ def get_returns_cvar(symbol : str, START_DATE : str = "2016-01-01" ) -> pd.Serie
         )
 
         bars = client.get_stock_bars(params)
-        df = bars.df.reset_index()
+        df = bars.df.reset_index()dd
         
         if "symbol" in df.columns:
             df = df[df["symbol"]== symbol]
@@ -2176,3 +2176,4 @@ def static_cvar_backtest(returns: pd.DataFrame, lookback: int = 252, steps: int 
         daily_returns.extend(period_returns)
 
     return pd.Series(daily_returns, index=dates)
+
