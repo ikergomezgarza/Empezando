@@ -1,4 +1,4 @@
-from projects.P13_BlackJack.models.hand import Hand
+from .hand import Hand
 
 class Participant:
     """Shared behavior between Player and Dealer."""

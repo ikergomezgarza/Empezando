@@ -1,4 +1,4 @@
-from projects.P13_BlackJack.models.card import Card, Suit
+from .card import Card, Suit
 import random
 
 class Shoe:

@@ -1,4 +1,4 @@
-from projects.P13_BlackJack.models.card import Card
+from .card import Card
 
 class Hand:
     

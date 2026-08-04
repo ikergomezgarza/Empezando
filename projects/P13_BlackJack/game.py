@@ -1,13 +1,13 @@
-from projects.P13_BlackJack.models.card import Card, Suit
-from projects.P13_BlackJack.models.shoe import Shoe
-from projects.P13_BlackJack.models.hand import Hand
-from projects.P13_BlackJack.models.participant import Player, Dealer
+from models.card import Card, Suit
+from models.shoe import Shoe
+from models.hand import Hand
+from models.participant import Player, Dealer
 
 class Game():
     
-    def __init__(self, num_decks: int = 6, num_players: int = 1, verbose: bool= True, local:bool = True):
+    def __init__(self, num_decks: int = 6, num_players: int = 1, players: list[Player] = None, verbose: bool= True, local:bool = True):
         self.shoe = Shoe(num_decks)
-        self.players = [Player(f"Player{i+1}") for i in range(num_players)]
+        self.players = players if players is not None else [Player(f"Player{i+1}") for i in range(num_players)]
         self.dealer = Dealer()
         self.verbose = verbose
         self.local = local 
@@ -153,7 +153,10 @@ class Game():
         self.play_dealer()
         self.resolve_round()
         for player in self.players:
+            for hand in player.hands:
+                hand.cards=[]
             player.chip_history.append(int(player.chips))
+            
         self.log()
             
     def log(self):
@@ -167,4 +170,3 @@ class Game():
                     else:
                         print(f"\n{player.name} draw and has {player.chip_history[-1]} chips left")
                         
-Game(num_decks=6, num_players=2).play_round()
