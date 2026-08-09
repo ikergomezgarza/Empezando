@@ -2,12 +2,16 @@ from .card import Card
 
 class Hand:
     
-    def __init__(self, from_split: bool = False, bet: int = 0):
+    def __init__(self, from_split: bool = False, bet: int = 0, split_count: int = 0):
         self.cards: list[Card] = []
         self.from_split = from_split
         self.bet = bet
         self.doubled = False
         self.resolved = False
+        self.split_count = split_count
+        self.insurance_bet= 0
+        self.category = "pair_split" if from_split else None
+        
         
     def add(self, card: Card):
         self.cards.append(card)
@@ -42,7 +46,12 @@ class Hand:
         return (
             len(self.cards) == 2
             and self.cards[0].rank == self.cards[1].rank
+            and self.split_count < 3
         )
     
     def can_double(self) -> bool:
         return len(self.cards) == 2 and not self.doubled
+    
+    def can_insure(self):
+        return self.cards[0].rank == "A"
+    

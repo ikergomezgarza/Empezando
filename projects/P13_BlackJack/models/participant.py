@@ -11,15 +11,19 @@ class Participant:
         
 class Player(Participant):
     
-    def __init__(self, name: str, chips: int = 100):
+    def __init__(self, name: str, unit_value: int = 100):
         super().__init__(name)
-        self.chips = chips
+        self.chips = 0
+        self.unit_value: int = unit_value
+        self.bankroll: int = self.unit_value * 1000
         self.hands: list[Hand] = [Hand()]
-        self.chip_history: list[int] = [chips]
+        self.net_worth: list[int] = [self.chips + self.bankroll]
     
     def place_bet(self, hand: Hand, amount: int):
         if amount > self.chips:
-            raise ValueError("Not enough chips")
+            self.cash_in(initial=False)
+        if amount > self.chips:
+            amount = self.chips
         hand.bet = amount
         self.chips -= amount
     
@@ -30,6 +34,17 @@ class Player(Participant):
     def push_bet(self, hand: Hand):
         self.chips += hand.bet
         hand.bet = 0
+        
+    def cash_in (self, initial= True):
+        amount = self.unit_value * 1000 * 1
+        if initial:
+            amount = self.unit_value * 1000 * 1
+        self.chips += amount
+        self. bankroll -= amount
+    
+    def cash_out (self):
+        self.bankroll += self.chips
+        self.chips = 0
         
         
 class Dealer(Participant):

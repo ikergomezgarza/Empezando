@@ -40,3 +40,4 @@ class Card:
         suit_name = self.suit.name.lower()
         rank_name = RANK_NAMES.get(self.rank, self.rank)  # J/Q/K/A -> words, 2-10 unchanged
         return str(ASSETS_DIR / f"{rank_name}_of_{suit_name}.png")
+    
