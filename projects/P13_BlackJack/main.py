@@ -5,10 +5,10 @@ from game import Game
 
 CONFIGS = {
     "perfect_strategy":            dict(manual=False, counting=False, verbose=False),
-    #"counting_conservative_nodev": dict(manual=False, counting=True, deviations=False, spread="conservative", verbose=False),
-    #"counting_conservative_dev":   dict(manual=False, counting=True, deviations=True,  spread="conservative", verbose=False),
-    #"counting_aggressive_nodev":   dict(manual=False, counting=True, deviations=False, spread="aggressive",   verbose=False),
-    #"counting_aggressive_dev":     dict(manual=False, counting=True, deviations=True,  spread="aggressive",   verbose=False),
+    "counting_conservative_nodev": dict(manual=False, counting=True, deviations=False, spread="conservative", verbose=False),
+    "counting_conservative_dev":   dict(manual=False, counting=True, deviations=True,  spread="conservative", verbose=False),
+    "counting_aggressive_nodev":   dict(manual=False, counting=True, deviations=False, spread="aggressive",   verbose=False),
+    "counting_aggressive_dev":     dict(manual=False, counting=True, deviations=True,  spread="aggressive",   verbose=False),
 }
 
 N_SESSIONS = 100
