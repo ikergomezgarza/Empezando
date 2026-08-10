@@ -14,13 +14,13 @@ N_SESSIONS = 100
 ROUNDS_PER_SESSION = 10000
 NUM_DECKS = 6
 
-def run_sessions(config: dict, n_sessions: int, rounds_per_session: int) -> list[dict]:
+def run_sessions(config: dict, n_sessions: int, rounds_per_session: int, unit_value: int) -> list[dict]:
     results = []
 
     for _ in range(n_sessions):
         game = Game(num_decks=NUM_DECKS, num_players=1, **config, min_bet=0, max_bet=10000000, surrender=True, DAS=True)
-        
         player = game.players[0]
+        player.unit_value= unit_value
         game.simulate(rounds_per_session)
         net_worth = player.net_worth
 

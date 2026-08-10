@@ -2053,7 +2053,7 @@ def get_returns_cvar(symbol : str, START_DATE : str = "2016-01-01" ) -> pd.Serie
         )
 
         bars = client.get_stock_bars(params)
-        df = bars.df.reset_index()dd
+        df = bars.df.reset_index()
         
         if "symbol" in df.columns:
             df = df[df["symbol"]== symbol]

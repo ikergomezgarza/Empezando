@@ -3,6 +3,7 @@ import pandas as pd
 from collections import Counter
 from game import Game
 import statistics
+import streamlit as st
 
 def build_montecarlo_matrix(results: list[dict]) -> pd.DataFrame:
 
@@ -18,22 +19,40 @@ def build_montecarlo_matrix(results: list[dict]) -> pd.DataFrame:
 def plot_montecarlo(matrix: pd.DataFrame, strategy = ""):
     for col in matrix.columns:
         plt.plot(matrix.index, matrix[col], alpha=0.2, color="steelblue")
-
-    plt.plot(matrix.index, matrix.mean(axis=1), color="red", linewidth=2.5, label="Mean")
-    plt.xlabel("Hands")
-    plt.ylabel("Net Worth")
-    plt.title(strategy)
     
-    std = matrix.std(axis=1)
     mean = matrix.mean(axis=1)
-    plt.fill_between(matrix.index, mean - std, mean + std, color="red", alpha=0.15, label = "1 std" )
+    std = matrix.std(axis=1)
     lower = matrix.quantile(0.05, axis=1)
     upper = matrix.quantile(0.95, axis=1)
-    plt.fill_between(matrix.index, lower, upper, color="red", alpha=0.15, label="5th–95th pct")
     
+        
+    plt.xlabel("Hands")
+    plt.ylabel("Net Worth")
+    plt.title(strategy)   
+    plt.plot(matrix.index, matrix.mean(axis=1), color="red", linewidth=2.5, label="Mean")
+    plt.fill_between(matrix.index, mean - std, mean + std, color="red", alpha=0.15, label = "1 std" )
+    plt.fill_between(matrix.index, lower, upper, color="red", alpha=0.15, label="5th–95th pct")
     plt.legend()
     plt.show()
 
+def st_plot_montecarlo(matrix: pd.DataFrame, strategy = ""):
+    for col in matrix.columns:
+        plt.plot(matrix.index, matrix[col], alpha=0.2, color="steelblue")
+    
+    mean = matrix.mean(axis=1)
+    std = matrix.std(axis=1)
+    lower = matrix.quantile(0.05, axis=1)
+    upper = matrix.quantile(0.95, axis=1)
+            
+    fig, ax = plt.subplots()
+    ax.set_xlabel("Hands")
+    ax.set_ylabel("Net Worth")
+    ax.set_title(strategy)
+    ax.plot(matrix.index, mean, color="red", linewidth=2.5, label="Mean")
+    ax.fill_between(matrix.index, mean - std, mean + std, color="red", alpha=0.15, label="1 std")
+    ax.fill_between(matrix.index, lower, upper, color="red", alpha=0.15, label="5th–95th pct")
+    ax.legend()
+    st.pyplot(fig)
 
 def summarize(results: list[dict]) -> dict:
     finals = [r["final_net_worth"] for r in results]

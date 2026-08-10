@@ -15,5 +15,6 @@ st.page_link("pages/5_Black_Scholes.py", label="Go to Opcion chain and Greeks Mo
 st.page_link("pages/6_Volatility_Surface.py", label="Go to Volatility Surface Model")
 st.page_link("pages/7_Option_strategies.py", label="Go to Buy options simulation")
 st.page_link("pages/8_CVaR_model.py", label="Go to get the CVaR of a portfolio")
+st.page_link("pages/9_BlackJack.py", label="Go to play Black Jack")
 
 st.markdown("[← Back to Portfolio](https://ikergomezgarza.github.io)") 
