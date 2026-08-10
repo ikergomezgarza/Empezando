@@ -18,15 +18,19 @@ class Player(Participant):
         self.bankroll: int = self.unit_value * 1000
         self.hands: list[Hand] = [Hand()]
         self.net_worth: list[int] = [self.chips + self.bankroll]
+        self.ruined = False
     
     def place_bet(self, hand: Hand, amount: int):
+        if self.ruined:
+            hand.bet = 0
+            return
         if amount > self.chips:
             self.cash_in(initial=False)
-        if amount > self.chips:
+        if self.ruined or amount > self.chips:
             amount = self.chips
         hand.bet = amount
         self.chips -= amount
-    
+        
     def win_bet(self, hand: Hand, multiplier: float = 1.0):
         self.chips += hand.bet + (hand.bet * multiplier)
         hand.bet = 0
@@ -36,11 +40,14 @@ class Player(Participant):
         hand.bet = 0
         
     def cash_in (self, initial= True):
-        amount = self.unit_value * 1000 * 1
+        amount = self.unit_value * 1000 * 1/10
         if initial:
-            amount = self.unit_value * 1000 * 1
+            amount = self.unit_value * 1000 * 1/5
+        if not initial and self.bankroll < amount:
+            self.ruined = True
+            return
         self.chips += amount
-        self. bankroll -= amount
+        self.bankroll -= amount
     
     def cash_out (self):
         self.bankroll += self.chips

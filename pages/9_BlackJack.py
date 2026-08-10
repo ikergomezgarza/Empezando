@@ -6,9 +6,15 @@ sys.path.insert(0, str(PROJECT_DIR))
 
 from projects.P13_BlackJack.game import Game
 from projects.P13_BlackJack.main import run_sessions, summarize, main
+from collections import Counter
 
 
 modify_parameters = False
+min_bet= 0
+max_bet = 1000000
+manual= False
+counting= False
+spread= "conservative"
 
 if "phase" not in st.session_state:
     st.session_state.phase = "setup"
@@ -26,8 +32,8 @@ if modify_parameters:
     
     with col1:
         st.write("Strategy methode:")
-        manual= st.toggle("Play manualy:")
-        if not manual:
+        automatic = st.toggle("Play Automatic:")
+        if automatic:
             counting = st.toggle("Card counting:")
         if counting:
             spread = st.selectbox("Spread:", ["conservative", "aggressive"])
@@ -44,9 +50,9 @@ st.session_state.game = Game(num_decks=6, players=1, verbose=False,
 
 
 #------------------ Second part game playing ------------------------------
-if st.session_state.phase == "playing":
+if st.button("Run"):
+    st.session_state.phase = "playing"
     
-    st.rerun()
     game = st.session_state.game
     
     if manual:
@@ -65,28 +71,28 @@ if st.session_state.phase == "playing":
             st.write("Dealer: —")
                 
         #Show user cards
-        if hand.cards:
+        if game.hand.cards:
             st.write("Your hand:")
-            cols = st.columns(len(hand.cards))
-            for col, card in zip(cols, hand.cards):
+            cols = st.columns(len(game.hand.cards))
+            for col, card in zip(cols, game.hand.cards):
                 col.image(card.image_path(), width=100)
-            st.write(f"Value: {hand.value()}")
+            st.write(f"Value: {game.hand.value()}")
         else:
             st.write("Click 'New Round' to deal cards.")
         
         
         col1, col2, col3, col4 = st.columns(4)
         if col1.button("Hit"):
-            hand.add(game.shoe.draw())
+            game.hand.add(game.shoe.draw())
             st.rerun()
         if col2.button("Stand"):
-            hand.resolved = True
+            game.hand.resolved = True
             st.rerun()
-        if col3.button("Double") and hand.can_double():
-            game.double_down(player, hand)
+        if col3.button("Double") and game.hand.can_double():
+            game.double_down(game.player, game.hand)
             st.rerun()
-        if col4.button("Split") and hand.can_split():
-            game.split(player, hand)
+        if col4.button("Split") and game.hand.can_split():
+            game.split(game.player, game.hand)
             st.rerun()
 
     if not manual:
@@ -100,7 +106,7 @@ if st.session_state.phase == "playing":
             for a, b in zip(net_worth, net_worth[1:])
         )
 
-        results.append({
+        game.results.append({
             "final_net_worth": net_worth[-1],
             "went_negative": went_negative,
             "wins": wl["W"],

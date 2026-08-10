@@ -9,9 +9,8 @@ class Hand:
         self.doubled = False
         self.resolved = False
         self.split_count = split_count
-        self.insurance_bet= 0
-        self.category = "pair_split" if from_split else None
-        
+        self.insurance_bet = 0
+        self.category = None
         
     def add(self, card: Card):
         self.cards.append(card)
@@ -49,9 +48,13 @@ class Hand:
             and self.split_count < 3
         )
     
-    def can_double(self) -> bool:
-        return len(self.cards) == 2 and not self.doubled
+    def can_double(self, DAS=True) -> bool:
+        if not self.from_split:
+            return len(self.cards) == 2 and not self.doubled
+        return DAS and len(self.cards) == 2 and not self.doubled
     
     def can_insure(self):
         return self.cards[0].rank == "A"
-    
+
+    def __str__(self):
+        return " ".join(str(card) for card in self.cards)
