@@ -54,6 +54,26 @@ def st_plot_montecarlo(matrix: pd.DataFrame, strategy = ""):
     ax.legend()
     st.pyplot(fig)
 
+def st_multi_plot(list_matrixes, labels=None, strategy=""):
+    fig, ax = plt.subplots()
+    ax.set_title(strategy)
+    ax.set_xlabel("Hands")
+    ax.set_ylabel("Net Worth")
+
+    colors = plt.cm.tab10.colors
+
+    for i, matrix in enumerate(list_matrixes):
+        mean = matrix.mean(axis=1)
+        std = matrix.std(axis=1)
+        color = colors[i % len(colors)]
+        label = labels[i] if labels else f"Series {i+1}"
+
+        ax.plot(matrix.index, mean, color=color, linewidth=2.5, label=label)
+        ax.fill_between(matrix.index, mean - std, mean + std, color=color, alpha=0.15)
+
+    ax.legend()
+    st.pyplot(fig)
+
 def summarize(results: list[dict]) -> dict:
     finals = [r["final_net_worth"] for r in results]
     ruin_pct = 100 * sum(r["went_negative"] for r in results) / len(results)
@@ -63,7 +83,18 @@ def summarize(results: list[dict]) -> dict:
     total_draws = sum(r["draws"] for r in results)
 
     win_rate = 100 * total_wins / (total_wins + total_losses + total_draws)
-
+    
+    if len(results) == 1:
+        return {
+                "mean_final_net_worth": round(statistics.mean(finals), 2),
+                "std_final_net_worth": round(0, 2),
+                "min_final_net_worth": min(finals),
+                "max_final_net_worth": max(finals),
+                "risk_of_ruin_pct": round(ruin_pct, 2),
+                "win_rate_pct": round(win_rate, 2),
+                "median_final_net_worth": round(statistics.median(finals), 2),
+            }
+        
     return {
         "mean_final_net_worth": round(statistics.mean(finals), 2),
         "std_final_net_worth": round(statistics.stdev(finals), 2),
